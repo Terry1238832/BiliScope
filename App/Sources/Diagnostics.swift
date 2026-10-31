@@ -51,6 +51,7 @@ final class Diagnostics: NSObject, URLSessionDataDelegate {
                 lines.append("⑦ 解析+TCP upos-sz-mirrorcos \(await self.dnsAndTCP(host: "upos-sz-mirrorcos.bilivideo.com"))")
                 lines.append("⑧ 解析+TCP upos-hz-mirrorakam \(await self.dnsAndTCP(host: "upos-hz-mirrorakam.akamaized.net"))")
                 lines.append("⑨ 裸 TLS 对照 1.1.1.1 \(await self.rawCheck(host: "1.1.1.1"))")
+                lines.append("⑩ 按 IP 直连 + SNI \(await self.rawCheckByIP(host: "upos-sz-mirrorcosov.bilivideo.com"))")
             } catch {
                 lines.append("❌ \(error)")
             }
@@ -80,6 +81,44 @@ final class Diagnostics: NSObject, URLSessionDataDelegate {
             return "✅ 可达，HTTP \(head.status)，\(self.ms(since: start))ms"
         } catch {
             return "❌ \(self.describe(error))，\(self.ms(since: start))ms"
+        }
+    }
+
+    /// Same TLS request, but dials the resolved IPv4 directly while keeping the
+    /// hostname as SNI. If this works while ④ hangs, something is intercepting
+    /// host-based connections (typically the system HTTP proxy).
+    private func rawCheckByIP(host: String) async -> String {
+        var hints = addrinfo()
+        hints.ai_family = AF_INET
+        hints.ai_socktype = SOCK_STREAM
+        var result: UnsafeMutablePointer<addrinfo>?
+        guard getaddrinfo(host, "443", &hints, &result) == 0, let first = result else {
+            return "❌ DNS 失败"
+        }
+        defer { freeaddrinfo(result) }
+        guard let address = first.pointee.ai_addr else { return "❌ DNS 无地址" }
+        var buffer = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+        guard getnameinfo(address, first.pointee.ai_addrlen, &buffer, socklen_t(buffer.count), nil, 0, NI_NUMERICHOST) == 0 else {
+            return "❌ 地址转换失败"
+        }
+        let ip = String(cString: buffer)
+        let start = Date()
+        do {
+            let client = try await UpstreamClient.open(host: host, port: 443, timeout: 8, connectToIP: ip)
+            let watchdog = Task {
+                try? await Task.sleep(nanoseconds: 12_000_000_000)
+                client.cancel()
+            }
+            defer {
+                watchdog.cancel()
+                client.cancel()
+            }
+            try await client.send(Data("GET / HTTP/1.1\r\nHost: \(host)\r\nConnection: close\r\n\r\n".utf8))
+            let stream = ResponseStream(client: client)
+            let head = try await stream.readHead()
+            return "✅ \(ip) HTTP \(head.status)，\(self.ms(since: start))ms"
+        } catch {
+            return "❌ \(ip) \(self.describe(error))，\(self.ms(since: start))ms"
         }
     }
 

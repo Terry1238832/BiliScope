@@ -23,7 +23,8 @@ public final class UpstreamClient: @unchecked Sendable {
     public static func open(host: String,
                             port: UInt16 = 443,
                             timeout: TimeInterval = 15,
-                            trustRootDER: Data? = nil) async throws -> UpstreamClient {
+                            trustRootDER: Data? = nil,
+                            connectToIP: String? = nil) async throws -> UpstreamClient {
         let tls = NWProtocolTLS.Options()
         sec_protocol_options_set_tls_server_name(tls.securityProtocolOptions, host)
         sec_protocol_options_add_tls_application_protocol(tls.securityProtocolOptions, "http/1.1")
@@ -50,7 +51,7 @@ public final class UpstreamClient: @unchecked Sendable {
         parameters.preferNoProxies = true
         // "localhost" may resolve to ::1 first, while our loopback listeners
         // are IPv4-only. Keep the TLS server name but dial 127.0.0.1.
-        let endpointHost = host == "localhost" ? "127.0.0.1" : host
+        let endpointHost = connectToIP ?? (host == "localhost" ? "127.0.0.1" : host)
         let client = UpstreamClient(connection: NWConnection(host: NWEndpoint.Host(endpointHost),
                                                              port: NWEndpoint.Port(rawValue: port)!,
                                                              using: parameters))
