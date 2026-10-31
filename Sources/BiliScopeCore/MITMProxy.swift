@@ -346,7 +346,12 @@ final class MediaHandler: ChannelInboundHandler {
     }
 
     func errorCaught(context: ChannelHandlerContext, error: Error) {
-        config.log("tls/http error \(host): \(error)")
+        // Clients that drop the connection mid-handshake (health checks, user
+        // cancels) are routine; do not spam the in-app log with them.
+        let text = String(describing: error)
+        if !text.contains("EOF during handshake") {
+            config.log("tls/http error \(host): \(error)")
+        }
         context.close(promise: nil)
     }
 

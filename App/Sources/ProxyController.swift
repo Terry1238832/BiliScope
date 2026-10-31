@@ -41,7 +41,7 @@ final class ProxyController: ObservableObject {
     private var proxy: MITMProxy?
     private var profileServer: ProfileServer?
     private let keepAlive = AudioKeepAlive()
-    private var check: SelfCheck?
+    private var diagnostics: Diagnostics?
 
     init() {
         bindMode = ProxyController.storedBindMode()
@@ -60,7 +60,7 @@ final class ProxyController: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
             self?.start()
             if forced {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { self?.runSelfCheck() }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { self?.runDiagnostics() }
             }
         }
     }
@@ -225,21 +225,21 @@ final class ProxyController: ObservableObject {
 
     // MARK: - Self check
 
-    func runSelfCheck() {
+    func runDiagnostics() {
         guard isRunning, let ca = try? CertificateAuthority(directory: caDirectory) else {
             selfCheckText = "请先启动代理"
             return
         }
         selfCheckRunning = true
         selfCheckText = "检测中…"
-        let check = SelfCheck(caDER: ca.rootCertificateDER, port: proxyPort)
-        self.check = check
-        check.run { [weak self] result in
+        let diagnostics = Diagnostics(caDER: ca.rootCertificateDER, port: proxyPort)
+        self.diagnostics = diagnostics
+        diagnostics.run { [weak self] result in
             DispatchQueue.main.async {
                 self?.selfCheckRunning = false
                 self?.selfCheckText = result
-                self?.append("自检：\(result)")
-                self?.check = nil
+                self?.append("诊断：\(result.replacingOccurrences(of: "\n", with: " | "))")
+                self?.diagnostics = nil
             }
         }
     }

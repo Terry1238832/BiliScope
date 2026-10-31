@@ -166,15 +166,15 @@ struct ContentView: View {
     private var checkCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("连通性自检").font(.headline)
-            Text("用本机代理向 B 站 CDN 发一个 Range 请求，验证证书与分片链路。")
+            Text("依次检查本机代理端口、CONNECT 握手、以及经代理访问 B 站 CDN。哪一步红的就是卡在哪。")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Button {
-                controller.runSelfCheck()
+                controller.runDiagnostics()
             } label: {
                 HStack {
                     if controller.selfCheckRunning { ProgressView().controlSize(.small) }
-                    Text(controller.selfCheckRunning ? "检测中…" : "运行自检")
+                    Text(controller.selfCheckRunning ? "检测中…" : "运行诊断")
                 }
             }
             .buttonStyle(.borderedProminent)

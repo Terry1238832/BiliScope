@@ -8,22 +8,22 @@
 
 /* Begin PBXBuildFile section */
 		0B61462454841DF7CB444149 /* CertificateTrust.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFD6CBD9A3E26A5D411691A0 /* CertificateTrust.swift */; };
+		24A61D4D5524A492A285DE28 /* Diagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6BD9ABA7355E96B31264E69 /* Diagnostics.swift */; };
 		2F816AD71524BD846D307D1A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 399A27E410755D9AF4A1F0A3 /* ContentView.swift */; };
 		60D43FCED3060BCA86EE54B8 /* AudioKeepAlive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B219A2A3C281D3EE442D89B /* AudioKeepAlive.swift */; };
-		7941702384BDA02BF0C1278E /* SelfCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F41DF78E7AF0C6D68694E4E /* SelfCheck.swift */; };
 		96D2A20C6A64F4FBA0267503 /* ProxyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C28CCDCD6741B5FD1D714BE /* ProxyController.swift */; };
 		A7F6018668FDF30E54231358 /* BiliScopeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C69B41600D884D35324970D1 /* BiliScopeApp.swift */; };
 		FA6515A9C59A7BF3014CDEA1 /* BiliScopeCore in Frameworks */ = {isa = PBXBuildFile; productRef = 67967C746198B3E4D3938831 /* BiliScopeCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		2F41DF78E7AF0C6D68694E4E /* SelfCheck.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelfCheck.swift; sourceTree = "<group>"; };
 		399A27E410755D9AF4A1F0A3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		4B219A2A3C281D3EE442D89B /* AudioKeepAlive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioKeepAlive.swift; sourceTree = "<group>"; };
-		79D317FA1425CC721EE2FAF3 /* BiliScope.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BiliScope.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		79D317FA1425CC721EE2FAF3 /* BiliScope.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BiliScope.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C28CCDCD6741B5FD1D714BE /* ProxyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyController.swift; sourceTree = "<group>"; };
 		843F3563EC74C32FD8922C9B /* bilibilispeedup */ = {isa = PBXFileReference; lastKnownFileType = folder; name = bilibilispeedup; path = ..; sourceTree = SOURCE_ROOT; };
 		C69B41600D884D35324970D1 /* BiliScopeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiliScopeApp.swift; sourceTree = "<group>"; };
+		C6BD9ABA7355E96B31264E69 /* Diagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Diagnostics.swift; sourceTree = "<group>"; };
 		CFD6CBD9A3E26A5D411691A0 /* CertificateTrust.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CertificateTrust.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -46,8 +46,8 @@
 				C69B41600D884D35324970D1 /* BiliScopeApp.swift */,
 				CFD6CBD9A3E26A5D411691A0 /* CertificateTrust.swift */,
 				399A27E410755D9AF4A1F0A3 /* ContentView.swift */,
+				C6BD9ABA7355E96B31264E69 /* Diagnostics.swift */,
 				7C28CCDCD6741B5FD1D714BE /* ProxyController.swift */,
-				2F41DF78E7AF0C6D68694E4E /* SelfCheck.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -144,8 +144,8 @@
 				A7F6018668FDF30E54231358 /* BiliScopeApp.swift in Sources */,
 				0B61462454841DF7CB444149 /* CertificateTrust.swift in Sources */,
 				2F816AD71524BD846D307D1A /* ContentView.swift in Sources */,
+				24A61D4D5524A492A285DE28 /* Diagnostics.swift in Sources */,
 				96D2A20C6A64F4FBA0267503 /* ProxyController.swift in Sources */,
-				7941702384BDA02BF0C1278E /* SelfCheck.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
