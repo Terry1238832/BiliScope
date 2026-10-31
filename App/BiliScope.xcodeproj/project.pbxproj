@@ -1,0 +1,360 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0B61462454841DF7CB444149 /* CertificateTrust.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFD6CBD9A3E26A5D411691A0 /* CertificateTrust.swift */; };
+		2F816AD71524BD846D307D1A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 399A27E410755D9AF4A1F0A3 /* ContentView.swift */; };
+		60D43FCED3060BCA86EE54B8 /* AudioKeepAlive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B219A2A3C281D3EE442D89B /* AudioKeepAlive.swift */; };
+		7941702384BDA02BF0C1278E /* SelfCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F41DF78E7AF0C6D68694E4E /* SelfCheck.swift */; };
+		96D2A20C6A64F4FBA0267503 /* ProxyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C28CCDCD6741B5FD1D714BE /* ProxyController.swift */; };
+		A7F6018668FDF30E54231358 /* BiliScopeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C69B41600D884D35324970D1 /* BiliScopeApp.swift */; };
+		FA6515A9C59A7BF3014CDEA1 /* BiliScopeCore in Frameworks */ = {isa = PBXBuildFile; productRef = 67967C746198B3E4D3938831 /* BiliScopeCore */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		2F41DF78E7AF0C6D68694E4E /* SelfCheck.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelfCheck.swift; sourceTree = "<group>"; };
+		399A27E410755D9AF4A1F0A3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		4B219A2A3C281D3EE442D89B /* AudioKeepAlive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioKeepAlive.swift; sourceTree = "<group>"; };
+		79D317FA1425CC721EE2FAF3 /* BiliScope.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BiliScope.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7C28CCDCD6741B5FD1D714BE /* ProxyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyController.swift; sourceTree = "<group>"; };
+		843F3563EC74C32FD8922C9B /* bilibilispeedup */ = {isa = PBXFileReference; lastKnownFileType = folder; name = bilibilispeedup; path = ..; sourceTree = SOURCE_ROOT; };
+		C69B41600D884D35324970D1 /* BiliScopeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiliScopeApp.swift; sourceTree = "<group>"; };
+		CFD6CBD9A3E26A5D411691A0 /* CertificateTrust.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CertificateTrust.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		7B62CD4BE334EDD509D78817 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FA6515A9C59A7BF3014CDEA1 /* BiliScopeCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1028A61F6F234082E0ECC8F6 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				4B219A2A3C281D3EE442D89B /* AudioKeepAlive.swift */,
+				C69B41600D884D35324970D1 /* BiliScopeApp.swift */,
+				CFD6CBD9A3E26A5D411691A0 /* CertificateTrust.swift */,
+				399A27E410755D9AF4A1F0A3 /* ContentView.swift */,
+				7C28CCDCD6741B5FD1D714BE /* ProxyController.swift */,
+				2F41DF78E7AF0C6D68694E4E /* SelfCheck.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		1601171E7F893B4C7FBA6FDC /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				843F3563EC74C32FD8922C9B /* bilibilispeedup */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		6C326E15A0C506BB2E4E0D4C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				79D317FA1425CC721EE2FAF3 /* BiliScope.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B2E981981412DD21FB4EC0A0 = {
+			isa = PBXGroup;
+			children = (
+				1601171E7F893B4C7FBA6FDC /* Packages */,
+				1028A61F6F234082E0ECC8F6 /* Sources */,
+				6C326E15A0C506BB2E4E0D4C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		CFDED198AF454BAEB29DE5CF /* BiliScope */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CB8499AF1C0A2362A4C87862 /* Build configuration list for PBXNativeTarget "BiliScope" */;
+			buildPhases = (
+				07C0D57C9DA81206C5B9D594 /* Sources */,
+				7B62CD4BE334EDD509D78817 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BiliScope;
+			packageProductDependencies = (
+				67967C746198B3E4D3938831 /* BiliScopeCore */,
+			);
+			productName = BiliScope;
+			productReference = 79D317FA1425CC721EE2FAF3 /* BiliScope.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C507E60D39E771B84C4CEC98 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					CFDED198AF454BAEB29DE5CF = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = F2B207994CE14FA3C681154D /* Build configuration list for PBXProject "BiliScope" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = B2E981981412DD21FB4EC0A0;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0CB9E2D05568FAA5EC61AAB5 /* XCLocalSwiftPackageReference ".." */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 6C326E15A0C506BB2E4E0D4C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				CFDED198AF454BAEB29DE5CF /* BiliScope */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		07C0D57C9DA81206C5B9D594 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				60D43FCED3060BCA86EE54B8 /* AudioKeepAlive.swift in Sources */,
+				A7F6018668FDF30E54231358 /* BiliScopeApp.swift in Sources */,
+				0B61462454841DF7CB444149 /* CertificateTrust.swift in Sources */,
+				2F816AD71524BD846D307D1A /* ContentView.swift in Sources */,
+				96D2A20C6A64F4FBA0267503 /* ProxyController.swift in Sources */,
+				7941702384BDA02BF0C1278E /* SelfCheck.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		080D241E20324C68691C49F0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				INFOPLIST_FILE = Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tangluyao.biliscope;
+				PRODUCT_NAME = BiliScope;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		172F5CC76C4CE2FBE8D6FB37 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		2DD40B5556D303DAD408B59F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				INFOPLIST_FILE = Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tangluyao.biliscope;
+				PRODUCT_NAME = BiliScope;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		EF01E636EDDE5280AA435C0A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CB8499AF1C0A2362A4C87862 /* Build configuration list for PBXNativeTarget "BiliScope" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2DD40B5556D303DAD408B59F /* Debug */,
+				080D241E20324C68691C49F0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F2B207994CE14FA3C681154D /* Build configuration list for PBXProject "BiliScope" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EF01E636EDDE5280AA435C0A /* Debug */,
+				172F5CC76C4CE2FBE8D6FB37 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		0CB9E2D05568FAA5EC61AAB5 /* XCLocalSwiftPackageReference ".." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		67967C746198B3E4D3938831 /* BiliScopeCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = BiliScopeCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = C507E60D39E771B84C4CEC98 /* Project object */;
+}

@@ -1,0 +1,20 @@
+# build products
+.build/
+.derived/
+.derived-*/
+App/.derived/
+App/.derived-*/
+App/.spm/
+.spm/
+
+# local scratch
+.tmp/
+.dev-ca/
+
+# vendored tooling (installed on demand, see README)
+tools/xcodegen/
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+tools/xcodegen.zip
