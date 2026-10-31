@@ -30,6 +30,7 @@ final class Diagnostics: NSObject, URLSessionDataDelegate {
         Task { [weak self] in
             guard let self else { return }
             var lines: [String] = []
+            lines.append("◆ 当前网络 \(await self.networkType())")
             do {
                 let connection = try await Net.connect(host: "127.0.0.1", port: self.port, timeout: 4)
                 lines.append("① 本机代理 TCP `127.0.0.1:\(self.port)` ✅ \(self.elapsed)ms")
@@ -49,6 +50,7 @@ final class Diagnostics: NSObject, URLSessionDataDelegate {
                 lines.append("⑥ 解析+TCP upos-sz-mirrorcosov \(await self.dnsAndTCP(host: "upos-sz-mirrorcosov.bilivideo.com"))")
                 lines.append("⑦ 解析+TCP upos-sz-mirrorcos \(await self.dnsAndTCP(host: "upos-sz-mirrorcos.bilivideo.com"))")
                 lines.append("⑧ 解析+TCP upos-hz-mirrorakam \(await self.dnsAndTCP(host: "upos-hz-mirrorakam.akamaized.net"))")
+                lines.append("⑨ 裸 TLS 对照 1.1.1.1 \(await self.rawCheck(host: "1.1.1.1"))")
             } catch {
                 lines.append("❌ \(error)")
             }
@@ -142,6 +144,18 @@ final class Diagnostics: NSObject, URLSessionDataDelegate {
             }
         }
         return error.localizedDescription
+    }
+
+    private func networkType() async -> String {
+        let monitor = NWPathMonitor()
+        monitor.start(queue: DispatchQueue(label: "com.biliscope.path"))
+        try? await Task.sleep(nanoseconds: 300_000_000)
+        let path = monitor.currentPath
+        monitor.cancel()
+        if path.usesInterfaceType(.wifi) { return "Wi-Fi" }
+        if path.usesInterfaceType(.cellular) { return "蜂窝" }
+        if path.usesInterfaceType(.wiredEthernet) { return "有线" }
+        return path.status == .satisfied ? "其他" : "无网络"
     }
 
     private var elapsed: Int { Int(Date().timeIntervalSince(started) * 1000) }

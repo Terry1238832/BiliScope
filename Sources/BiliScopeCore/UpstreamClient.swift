@@ -45,6 +45,9 @@ public final class UpstreamClient: @unchecked Sendable {
 
         let parameters = NWParameters(tls: tls, tcp: tcp)
         parameters.allowLocalEndpointReuse = true
+        // Never send our own upstream traffic into the system HTTP proxy --
+        // that proxy is this very process, and would loop forever.
+        parameters.preferNoProxies = true
         // "localhost" may resolve to ::1 first, while our loopback listeners
         // are IPv4-only. Keep the TLS server name but dial 127.0.0.1.
         let endpointHost = host == "localhost" ? "127.0.0.1" : host
