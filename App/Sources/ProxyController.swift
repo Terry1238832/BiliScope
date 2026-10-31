@@ -143,7 +143,7 @@ final class ProxyController: ObservableObject {
             let proxy = MITMProxy(ca: ca, config: .init(bindHost: bindHost,
                                                         port: proxyPort,
                                                         concurrency: 8,
-                                                        chunkSize: 2 << 20,
+                                                        chunkSize: 1 << 20,
                                                         allowedClients: clients,
                                                         logForeignHosts: logAllHosts,
                                                         log: logger,

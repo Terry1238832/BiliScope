@@ -180,6 +180,7 @@ final class Diagnostics: NSObject, URLSessionDataDelegate {
             case .closed: return "连接被关闭"
             case .tls: return "TLS 失败"
             case .http(let text): return text
+            case .unexpectedStatus(let status): return "HTTP \(status)"
             }
         }
         return error.localizedDescription

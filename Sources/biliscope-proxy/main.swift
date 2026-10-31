@@ -17,7 +17,7 @@ func run() throws {
         default: home.appendingPathComponent("Library/Application Support/BiliScope").path))
     let port = UInt16(argument("--port", default: "8888")) ?? 8888
     let profilePort = UInt16(argument("--profile-port", default: "8899")) ?? 8899
-    let chunkSize = Int64(argument("--chunk-size", default: "2097152")) ?? (2 << 20)
+    let chunkSize = Int64(argument("--chunk-size", default: "1048576")) ?? (1 << 20)
     let concurrency = Int(argument("--concurrency", default: "8")) ?? 8
     let bindHost = argument("--bind", default: lanMode ? "0.0.0.0" : "127.0.0.1")
 
@@ -50,6 +50,7 @@ func run() throws {
                                                 concurrency: concurrency,
                                                 chunkSize: chunkSize,
                                                 allowedClients: allowlist,
+                                                logForeignHosts: arguments.contains("--log-all"),
                                                 log: logger))
     let actual = try proxy.start()
     print("proxy      : http://\(bindHost == "0.0.0.0" ? "127.0.0.1" : bindHost):\(actual)")

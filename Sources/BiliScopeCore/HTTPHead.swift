@@ -15,9 +15,10 @@ public struct HTTPRequestHead: Sendable {
 
     /// Absolute path + query for origin-form targets.
     public var path: String {
-        if let url = URL(string: target), let scheme = url.scheme, scheme.hasPrefix("http") {
-            var value = url.path.isEmpty ? "/" : url.path
-            if let query = url.query { value += "?" + query }
+        // Percent-encoded forms: decoding would change the bytes of a signed URL.
+        if let url = URLComponents(string: target), let scheme = url.scheme, scheme.hasPrefix("http") {
+            var value = url.percentEncodedPath.isEmpty ? "/" : url.percentEncodedPath
+            if let query = url.percentEncodedQuery { value += "?" + query }
             return value
         }
         return target
@@ -47,7 +48,7 @@ public enum HTTPHeadParser {
     /// the blank line, or `nil` when the buffer does not hold a complete head.
     public static func parseRequest(_ data: Data) -> (HTTPRequestHead, Int)? {
         guard let end = headEnd(in: data) else { return nil }
-        guard let text = String(data: data[data.startIndex..<end], encoding: .utf8) else { return nil }
+        guard let text = String(data: data.prefix(end), encoding: .utf8) else { return nil }
         var lines = text.components(separatedBy: "\r\n")
         guard !lines.isEmpty else { return nil }
         let requestLine = lines.removeFirst().split(separator: " ", omittingEmptySubsequences: true)
@@ -70,7 +71,7 @@ public enum HTTPHeadParser {
 
     public static func parseResponse(_ data: Data) -> (HTTPResponseHead, Int)? {
         guard let end = headEnd(in: data) else { return nil }
-        guard let text = String(data: data[data.startIndex..<end], encoding: .utf8) else { return nil }
+        guard let text = String(data: data.prefix(end), encoding: .utf8) else { return nil }
         var lines = text.components(separatedBy: "\r\n")
         guard !lines.isEmpty else { return nil }
         let statusLine = lines.removeFirst().split(separator: " ", maxSplits: 2, omittingEmptySubsequences: true)
@@ -108,6 +109,39 @@ public enum HTTPHeadParser {
                 return i + 4
             }
             i += 1
+        }
+        return nil
+    }
+}
+
+/// Reads the server name from a TLS ClientHello. VPN clients may CONNECT to a bare
+/// IP, and this is then the only place the real host name appears.
+enum TLSClientHello {
+    static func serverName(in data: Data) -> String? {
+        let bytes = [UInt8](data)
+        // Record header (5) + handshake header (4) + version (2) + random (32).
+        var i = 43
+        guard bytes.count > i, bytes[0] == 0x16, bytes[5] == 0x01 else { return nil }
+        func u16(_ at: Int) -> Int { Int(bytes[at]) << 8 | Int(bytes[at + 1]) }
+        i += 1 + Int(bytes[i])                                  // session id
+        guard i + 2 <= bytes.count else { return nil }
+        i += 2 + u16(i)                                         // cipher suites
+        guard i + 1 <= bytes.count else { return nil }
+        i += 1 + Int(bytes[i])                                  // compression methods
+        guard i + 2 <= bytes.count else { return nil }
+        let extensionsEnd = min(bytes.count, i + 2 + u16(i))
+        i += 2
+        while i + 4 <= extensionsEnd {
+            let type = u16(i)
+            let length = u16(i + 2)
+            i += 4
+            // server_name: list length (2), name type (1), name length (2), name.
+            if type == 0, length >= 5, i + 5 <= extensionsEnd, bytes[i + 2] == 0 {
+                let nameLength = u16(i + 3)
+                guard i + 5 + nameLength <= extensionsEnd else { return nil }
+                return String(bytes: bytes[(i + 5)..<(i + 5 + nameLength)], encoding: .utf8)
+            }
+            i += length
         }
         return nil
     }

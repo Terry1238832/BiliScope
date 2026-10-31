@@ -33,4 +33,14 @@ final class ClientAllowlistTests: XCTestCase {
         XCTAssertTrue(LocalAddresses.isLocal("127.0.0.1"))
         XCTAssertTrue(LocalAddresses.isLocal("localhost"))
     }
+
+    func testRelayGuardStopsOneTargetPilingUp() {
+        let relays = RelayGuard(limit: 2)
+        XCTAssertTrue(relays.acquire("a:80"))
+        XCTAssertTrue(relays.acquire("a:80"))
+        XCTAssertFalse(relays.acquire("a:80"))
+        XCTAssertTrue(relays.acquire("b:80"))
+        relays.release("a:80")
+        XCTAssertTrue(relays.acquire("a:80"))
+    }
 }

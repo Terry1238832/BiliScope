@@ -13,6 +13,7 @@ public final class UpstreamClient: @unchecked Sendable {
         case closed
         case tls
         case http(String)
+        case unexpectedStatus(Int)
     }
 
     private let connection: NWConnection
@@ -40,6 +41,19 @@ public final class UpstreamClient: @unchecked Sendable {
             }, DispatchQueue(label: "com.biliscope.upstream.verify"))
         }
 
+        return try await connect(host: host, port: port, timeout: timeout, tls: tls, connectToIP: connectToIP)
+    }
+
+    /// Raw TCP for blind relays, on the same path rules as media downloads.
+    public static func openTCP(host: String, port: UInt16, timeout: TimeInterval = 10) async throws -> UpstreamClient {
+        try await connect(host: host, port: port, timeout: timeout, tls: nil, connectToIP: nil)
+    }
+
+    private static func connect(host: String,
+                                port: UInt16,
+                                timeout: TimeInterval,
+                                tls: NWProtocolTLS.Options?,
+                                connectToIP: String?) async throws -> UpstreamClient {
         let tcp = NWProtocolTCP.Options()
         tcp.connectionTimeout = Int(timeout)
         tcp.noDelay = true
@@ -49,6 +63,13 @@ public final class UpstreamClient: @unchecked Sendable {
         // Never send our own upstream traffic into the system HTTP proxy --
         // that proxy is this very process, and would loop forever.
         parameters.preferNoProxies = true
+        // A VPN client (Shadowrocket) forwards media hosts to this proxy and installs
+        // its own local proxy and fake-IP DNS. Measured on an iPhone: prohibiting
+        // tunnel interfaces still leaves through lo0 and loops, and dialling a resolved
+        // IP times out. Only requiring the physical interface reaches the CDN.
+        if !isLoopback(connectToIP ?? host), let physical = await PhysicalPath.shared.interfaceType() {
+            parameters.requiredInterfaceType = physical
+        }
         // "localhost" may resolve to ::1 first, while our loopback listeners
         // are IPv4-only. Keep the TLS server name but dial 127.0.0.1.
         let endpointHost = connectToIP ?? (host == "localhost" ? "127.0.0.1" : host)
@@ -57,6 +78,10 @@ public final class UpstreamClient: @unchecked Sendable {
                                                              using: parameters))
         try await client.start(timeout: timeout)
         return client
+    }
+
+    private static func isLoopback(_ host: String) -> Bool {
+        host == "localhost" || host == "::1" || host.hasPrefix("127.")
     }
 
     private init(connection: NWConnection) {
@@ -76,24 +101,35 @@ public final class UpstreamClient: @unchecked Sendable {
             }
         }
         let box = Box()
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            connection.stateUpdateHandler = { state in
-                switch state {
-                case .ready:
-                    box.once { continuation.resume() }
-                case .failed(let error):
-                    box.once { continuation.resume(throwing: error) }
-                case .cancelled:
-                    box.once { continuation.resume(throwing: Failure.closed) }
-                default:
-                    break
+        try Task.checkCancellation()
+        // Cancellable, so the loser of a mirror race stops connecting right away.
+        try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                connection.stateUpdateHandler = { state in
+                    switch state {
+                    case .ready:
+                        box.once { continuation.resume() }
+                    case .failed(let error):
+                        box.once { continuation.resume(throwing: error) }
+                    case .cancelled:
+                        box.once { continuation.resume(throwing: Failure.closed) }
+                    default:
+                        break
+                    }
+                }
+                connection.start(queue: queue)
+                queue.asyncAfter(deadline: .now() + timeout) {
+                    box.once { continuation.resume(throwing: Failure.timedOut) }
                 }
             }
-            connection.start(queue: queue)
-            queue.asyncAfter(deadline: .now() + timeout) {
-                box.once { continuation.resume(throwing: Failure.timedOut) }
-            }
+        } onCancel: { [connection] in
+            connection.cancel()
         }
+    }
+
+    /// The interface this connection actually uses, for the log.
+    public var interfaceName: String? {
+        connection.currentPath?.availableInterfaces.first?.name
     }
 
     public func send(_ data: Data) async throws {
@@ -143,6 +179,34 @@ public final class UpstreamClient: @unchecked Sendable {
         cancelled = true
         lock.unlock()
         connection.cancel()
+    }
+}
+
+/// Tracks which physical interface is usable, so Wi-Fi and cellular both work.
+/// One monitor per type: while a VPN runs, a monitor that only excludes tunnel
+/// interfaces reports no usable path.
+final class PhysicalPath: @unchecked Sendable {
+    static let shared = PhysicalPath()
+    private let monitors: [(type: NWInterface.InterfaceType, monitor: NWPathMonitor)]
+
+    private init() {
+        let queue = DispatchQueue(label: "com.biliscope.physical-path")
+        monitors = [NWInterface.InterfaceType.wifi, .wiredEthernet, .cellular].map { type in
+            let monitor = NWPathMonitor(requiredInterfaceType: type)
+            monitor.start(queue: queue)
+            return (type, monitor)
+        }
+    }
+
+    func interfaceType() async -> NWInterface.InterfaceType? {
+        // Monitors report their first path shortly after they start.
+        for _ in 0..<10 {
+            if let usable = monitors.first(where: { $0.monitor.currentPath.status == .satisfied }) {
+                return usable.type
+            }
+            try? await Task.sleep(nanoseconds: 50_000_000)
+        }
+        return nil
     }
 }
 
