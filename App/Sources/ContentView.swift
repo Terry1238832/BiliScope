@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct ContentView: View {
     @EnvironmentObject private var controller: ProxyController
@@ -134,7 +135,19 @@ struct ContentView: View {
             Divider().opacity(0.2)
 
             step(number: 2, title: "把 Wi-Fi 代理指向本机",
-                 detail: "设置 → 无线局域网 → 当前网络 ⓘ → 配置代理 → 手动\n填 \(controller.proxyAddress)")
+                 detail: "设置 → 无线局域网 → 当前网络 ⓘ → 配置代理 → 手动")
+
+            VStack(alignment: .leading, spacing: 6) {
+                proxyRow("服务器", controller.proxyHost, copyable: true)
+                proxyRow("端口", "\(controller.proxyPort)", copyable: false)
+                proxyRow("认证", "关闭", copyable: false)
+            }
+
+            Text("认证必须关闭：本代理不支持用户名密码，开了会直接连不上。")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
             Button("打开系统设置") { controller.openWiFiSettings() }
                 .buttonStyle(.bordered)
 
@@ -215,6 +228,27 @@ struct ContentView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .card()
+    }
+
+    private func proxyRow(_ title: String, _ value: String, copyable: Bool) -> some View {
+        HStack(spacing: 8) {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(width: 44, alignment: .leading)
+            Text(value)
+                .font(.system(.caption, design: .monospaced))
+            if copyable {
+                Button {
+                    UIPasteboard.general.string = value
+                } label: {
+                    Image(systemName: "doc.on.doc")
+                        .font(.caption2)
+                }
+                .buttonStyle(.borderless)
+            }
+            Spacer(minLength: 0)
+        }
     }
 
     private func step(number: Int, title: String, detail: String) -> some View {

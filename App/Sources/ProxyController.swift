@@ -80,9 +80,11 @@ final class ProxyController: ObservableObject {
         LocalAddresses.ipv4().first { $0 != "127.0.0.1" }
     }
 
-    var proxyAddress: String {
-        bindMode == .loopback ? "127.0.0.1:\(proxyPort)" : "\(wifiAddress ?? "0.0.0.0"):\(proxyPort)"
+    var proxyHost: String {
+        bindMode == .loopback ? "127.0.0.1" : (wifiAddress ?? "0.0.0.0")
     }
+
+    var proxyAddress: String { "\(proxyHost):\(proxyPort)" }
     var profileURL: URL { URL(string: "http://127.0.0.1:\(Self.profilePort)/ca.mobileconfig")! }
 
     private var caDirectory: URL {
