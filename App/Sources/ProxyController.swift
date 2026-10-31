@@ -258,11 +258,33 @@ final class ProxyController: ObservableObject {
         logs.removeAll()
     }
 
+    private var logFileURL: URL {
+        let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        return directory.appendingPathComponent("BiliScope.log")
+    }
+
+    private func persist(_ line: String) {
+        guard let data = (line + "\n").data(using: .utf8) else { return }
+        let url = logFileURL
+        if let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+           let size = attributes[.size] as? Int, size > 1_000_000 {
+            try? FileManager.default.removeItem(at: url)
+        }
+        if let handle = try? FileHandle(forWritingTo: url) {
+            defer { try? handle.close() }
+            _ = try? handle.seekToEnd()
+            try? handle.write(contentsOf: data)
+        } else {
+            try? data.write(to: url)
+        }
+    }
+
     private func append(_ line: String) {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
         let entry = "[\(formatter.string(from: Date()))] \(line)"
         logs.append(entry)
+        persist(entry)
         NSLog("BiliScope %@", entry)
         if logs.count > 300 { logs.removeFirst(logs.count - 300) }
     }

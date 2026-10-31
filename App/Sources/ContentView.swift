@@ -231,8 +231,9 @@ struct ContentView: View {
                 Text("日志").font(.headline)
                 Spacer()
                 ShareLink(item: controller.logs.joined(separator: "\n")) {
-                    Image(systemName: "square.and.arrow.up")
+                    Label("分享", systemImage: "square.and.arrow.up")
                         .font(.caption)
+                        .labelStyle(.titleAndIcon)
                 }
                 Button("清空") { controller.clearLogs() }
                     .font(.caption)
