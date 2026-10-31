@@ -107,7 +107,7 @@ public final class CertificateAuthority {
             extensions: try Certificate.Extensions {
                 Critical(BasicConstraints.isCertificateAuthority(maxPathLength: 0))
                 Critical(KeyUsage(digitalSignature: true, keyCertSign: true, cRLSign: true))
-                try SubjectKeyIdentifier(hash: Certificate.PublicKey(key.publicKey))
+                SubjectKeyIdentifier(hash: Certificate.PublicKey(key.publicKey))
             },
             issuerPrivateKey: Certificate.PrivateKey(key)
         )

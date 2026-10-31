@@ -1,7 +1,7 @@
 import Foundation
 import NIOCore
 import NIOPosix
-import NIOSSL
+@preconcurrency import NIOSSL
 
 /// A local HTTP proxy that only intercepts Bilibili media hosts.
 ///
@@ -190,12 +190,12 @@ final class FrontDoorHandler: ChannelInboundHandler {
         config.log("mitm \(host)")
         let promise = channel.eventLoop.makePromise(of: Void.self)
         channel.writeAndFlush(ByteBuffer(string: "HTTP/1.1 200 Connection Established\r\n\r\n"), promise: promise)
-        promise.futureResult.flatMap { _ -> EventLoopFuture<Void> in
-            do {
-                return channel.pipeline.addHandler(try NIOSSLServerHandler(context: sslContext))
-            } catch {
-                return channel.eventLoop.makeFailedFuture(error)
-            }
+        // NIOSSLServerHandler is not Sendable, which NIO 2.8 warns about when
+        // adding it from a closure. It is only ever touched on this channel's
+        // event loop, so the warning is benign.
+        let tlsHandler = NIOSSLServerHandler(context: sslContext)
+        promise.futureResult.flatMap { _ in
+            channel.pipeline.addHandler(tlsHandler)
         }.flatMap { _ in
             channel.pipeline.addHandler(MediaHandler(host: host, port: UInt16(port), config: self.config))
         }.flatMap { _ in
@@ -279,7 +279,7 @@ final class FrontDoorHandler: ChannelInboundHandler {
         guard !buffer.isEmpty else { return }
         let pending = buffer
         buffer.removeAll(keepingCapacity: false)
-        channel.pipeline.fireChannelRead(NIOAny(ByteBuffer(bytes: pending)))
+        channel.pipeline.fireChannelRead(ByteBuffer(bytes: pending))
     }
 
     private func respond(_ context: ChannelHandlerContext, _ text: String) {
@@ -608,3 +608,4 @@ private final class MirrorRaceBox: @unchecked Sendable {
         if exhausted { continuation.resume(throwing: error) }
     }
 }
+

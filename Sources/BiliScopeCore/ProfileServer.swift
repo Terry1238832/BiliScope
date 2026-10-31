@@ -1,6 +1,5 @@
 import Foundation
 import Network
-import BiliScopeCore
 
 /// Serves the root-certificate `.mobileconfig` so the user can install it
 /// through Safari. Loopback by default; the command-line LAN mode binds the

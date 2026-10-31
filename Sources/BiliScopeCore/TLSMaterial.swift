@@ -1,7 +1,7 @@
 import Foundation
 import NIOCore
 import NIOPosix
-import NIOSSL
+@preconcurrency import NIOSSL
 
 /// Caches one `NIOSSLContext` per host so we are not minting certificates for
 /// every connection.

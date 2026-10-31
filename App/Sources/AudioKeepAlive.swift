@@ -7,8 +7,17 @@ import AVFoundation
 final class AudioKeepAlive {
     private var player: AVAudioPlayer?
     private var active = false
+    private let queue = DispatchQueue(label: "com.biliscope.audio")
 
     func start() {
+        queue.async { [weak self] in self?.startOnQueue() }
+    }
+
+    func stop() {
+        queue.async { [weak self] in self?.stopOnQueue() }
+    }
+
+    private func startOnQueue() {
         guard !active else { return }
         let session = AVAudioSession.sharedInstance()
         do {
@@ -28,7 +37,7 @@ final class AudioKeepAlive {
         }
     }
 
-    func stop() {
+    private func stopOnQueue() {
         player?.stop()
         player = nil
         active = false
