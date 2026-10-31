@@ -46,6 +46,9 @@ final class Diagnostics: NSObject, URLSessionDataDelegate {
 
                 lines.append("④ 视频 CDN 直连（绕开系统代理）\(await self.rawCheck(host: "upos-sz-mirrorcosov.bilivideo.com"))")
                 lines.append("⑤ 基础网络 TCP 1.1.1.1:443 \(await self.rawTCPCheck(host: "1.1.1.1"))")
+                lines.append("⑥ 解析+TCP upos-sz-mirrorcosov \(await self.dnsAndTCP(host: "upos-sz-mirrorcosov.bilivideo.com"))")
+                lines.append("⑦ 解析+TCP upos-sz-mirrorcos \(await self.dnsAndTCP(host: "upos-sz-mirrorcos.bilivideo.com"))")
+                lines.append("⑧ 解析+TCP upos-hz-mirrorakam \(await self.dnsAndTCP(host: "upos-hz-mirrorakam.akamaized.net"))")
             } catch {
                 lines.append("❌ \(error)")
             }
@@ -62,7 +65,7 @@ final class Diagnostics: NSObject, URLSessionDataDelegate {
         do {
             let client = try await UpstreamClient.open(host: host, port: 443, timeout: 8)
             let watchdog = Task {
-                try? await Task.sleep(nanoseconds: 10_000_000_000)
+                try? await Task.sleep(nanoseconds: 15_000_000_000)
                 client.cancel()
             }
             defer {
@@ -87,6 +90,44 @@ final class Diagnostics: NSObject, URLSessionDataDelegate {
         } catch {
             return "❌ \(self.describe(error))，\(self.ms(since: start))ms"
         }
+    }
+
+    /// DNS result plus a plain TCP connect to each address, IPv4 and IPv6 separately.
+    private func dnsAndTCP(host: String) async -> String {
+        var hints = addrinfo()
+        hints.ai_family = AF_UNSPEC
+        hints.ai_socktype = SOCK_STREAM
+        var result: UnsafeMutablePointer<addrinfo>?
+        let status = getaddrinfo(host, "443", &hints, &result)
+        guard status == 0, let first = result else {
+            return "DNS 失败（\(String(cString: gai_strerror(status)))）"
+        }
+        defer { freeaddrinfo(result) }
+
+        var addresses: [String] = []
+        var pointer: UnsafeMutablePointer<addrinfo>? = first
+        while let info = pointer {
+            var buffer = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+            if getnameinfo(info.pointee.ai_addr, info.pointee.ai_addrlen,
+                           &buffer, socklen_t(buffer.count), nil, 0, NI_NUMERICHOST) == 0 {
+                let ip = String(cString: buffer)
+                if !addresses.contains(ip) { addresses.append(ip) }
+            }
+            pointer = info.pointee.ai_next
+        }
+
+        var parts: [String] = []
+        for ip in addresses.prefix(3) {
+            let start = Date()
+            do {
+                let connection = try await Net.connect(host: ip, port: 443, timeout: 5)
+                connection.cancel()
+                parts.append("\(ip) ✅ \(ms(since: start))ms")
+            } catch {
+                parts.append("\(ip) ❌ \(describe(error))")
+            }
+        }
+        return "DNS [\(addresses.prefix(3).joined(separator: ", "))] " + parts.joined(separator: " | ")
     }
 
     private func ms(since date: Date) -> Int { Int(Date().timeIntervalSince(date) * 1000) }
