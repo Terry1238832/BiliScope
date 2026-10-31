@@ -196,6 +196,25 @@ final class ProxyController: ObservableObject {
         }
     }
 
+    /// iOS keeps a profile-installed root untrusted until the user flips the
+    /// switch under General → About → Certificate Trust Settings.
+    func openCertificateTrustSettings() {
+        for candidate in ["App-Prefs:root=General&path=About/CERT_TRUST_SETTINGS",
+                          "App-prefs:root=General&path=About/CERT_TRUST_SETTINGS"] {
+            if let url = URL(string: candidate) {
+                UIApplication.shared.open(url, options: [:]) { success in
+                    if !success, let settings = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(settings)
+                    }
+                }
+                return
+            }
+        }
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
+        }
+    }
+
     func openWiFiSettings() {
         if let url = URL(string: "App-Prefs:root=WIFI"), UIApplication.shared.canOpenURL(url) {
             UIApplication.shared.open(url)

@@ -42,7 +42,7 @@ final class SelfCheck: NSObject, URLSessionDataDelegate {
             if let error {
                 let ns = error as NSError
                 if ns.domain == NSURLErrorDomain && ns.code == NSURLErrorSecureConnectionFailed {
-                    self.finish("❌ TLS 失败：根证书还没被系统信任。先安装根证书，再到 设置 → 通用 → 关于本机 → 证书信任设置 打开完全信任。")
+                    self.finish("❌ TLS 失败：根证书未受信任。仅安装描述文件不够，还要到 设置 → 通用 → 关于本机 → 证书信任设置 打开完全信任。")
                 } else {
                     self.finish("❌ 失败：\(ns.domain) \(ns.code) · \(ns.localizedDescription)")
                 }

@@ -108,12 +108,16 @@ struct ContentView: View {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(.orange)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("根证书还没被信任")
+                    Text("描述文件已装，但还没开「完全信任」")
                         .font(.subheadline.weight(.semibold))
-                    Text("没信任之前 B 站会一直转圈或报网络错误：设置 → 通用 → 关于本机 → 证书信任设置。")
+                    Text("设置 → 通用 → 关于本机 → 证书信任设置 → 打开 BiliScope Root CA 的开关。\nSettings → General → About → Certificate Trust Settings")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
+                    Button("打开证书信任设置") { controller.openCertificateTrustSettings() }
+                        .font(.caption)
+                        .buttonStyle(.bordered)
+                        .padding(.top, 2)
                 }
             }
             .padding(14)
@@ -128,7 +132,7 @@ struct ContentView: View {
             Text("三步接管").font(.headline)
 
             step(number: 1, title: "安装根证书",
-                 detail: "装完到「设置 → 通用 → 关于本机 → 证书信任设置」打开完全信任。")
+                 detail: "装完描述文件只是第一步，还要到「设置 → 通用 → 关于本机 → 证书信任设置」打开完全信任。")
             Button("安装根证书") { controller.installCertificate() }
                 .buttonStyle(.borderedProminent)
 
