@@ -1,5 +1,6 @@
 import Foundation
 import Network
+import BiliScopeCore
 import Security
 
 /// Three-phase connectivity check, so a failure says *where* it broke:
@@ -32,22 +33,58 @@ final class Diagnostics: NSObject, URLSessionDataDelegate {
                     .split(separator: "\r\n").first.map(String.init) ?? "?"
                 lines.append("② CONNECT ✅ \(status)")
 
-                let videoCDN = "https://upos-sz-mirrorcosov.bilivideo.com/"
-                let proxied = await self.request(url: videoCDN, useProxy: true, timeout: 12, range: false)
+                let proxied = await self.request(url: "https://upos-sz-mirrorcosov.bilivideo.com/",
+                                                 useProxy: true, timeout: 12, range: false)
                 lines.append("③ 视频 CDN 经代理 \(proxied)")
 
-                let direct = await self.request(url: videoCDN, useProxy: false, timeout: 12, range: false)
-                lines.append("④ 视频 CDN 直连 \(direct)")
-
-                let image = await self.request(url: "https://i0.hdslb.com/bfs/face/member/noface.jpg",
-                                               useProxy: false, timeout: 15, range: true)
-                lines.append("⑤ 图片 CDN 直连 \(image)")
+                lines.append("④ 视频 CDN 直连（绕开系统代理）\(await self.rawCheck(host: "upos-sz-mirrorcosov.bilivideo.com"))")
+                lines.append("⑤ 基础网络 TCP 1.1.1.1:443 \(await self.rawTCPCheck(host: "1.1.1.1"))")
             } catch {
                 lines.append("❌ \(error)")
             }
             let text = lines.joined(separator: "\n")
             DispatchQueue.main.async { completion(text) }
         }
+    }
+
+    /// Raw TLS + HTTP, bypassing URLSession and any system proxy.
+    private func rawCheck(host: String) async -> String {
+        let start = Date()
+        do {
+            let client = try await UpstreamClient.open(host: host, port: 443, timeout: 8)
+            defer { client.cancel() }
+            try await client.send(Data("GET / HTTP/1.1\r\nHost: \(host)\r\nConnection: close\r\n\r\n".utf8))
+            let stream = ResponseStream(client: client)
+            let head = try await stream.readHead()
+            return "✅ 可达，HTTP \(head.status)，\(self.ms(since: start))ms"
+        } catch {
+            return "❌ \(self.describe(error))，\(self.ms(since: start))ms"
+        }
+    }
+
+    private func rawTCPCheck(host: String) async -> String {
+        let start = Date()
+        do {
+            let connection = try await Net.connect(host: host, port: 443, timeout: 6)
+            connection.cancel()
+            return "✅ \(self.ms(since: start))ms"
+        } catch {
+            return "❌ \(self.describe(error))，\(self.ms(since: start))ms"
+        }
+    }
+
+    private func ms(since date: Date) -> Int { Int(Date().timeIntervalSince(date) * 1000) }
+
+    private func describe(_ error: Error) -> String {
+        if let failure = error as? UpstreamClient.Failure {
+            switch failure {
+            case .timedOut: return "连接超时（DNS 或 TCP 不通）"
+            case .closed: return "连接被关闭"
+            case .tls: return "TLS 失败"
+            case .http(let text): return text
+            }
+        }
+        return error.localizedDescription
     }
 
     private var elapsed: Int { Int(Date().timeIntervalSince(started) * 1000) }
