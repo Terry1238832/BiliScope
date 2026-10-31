@@ -182,7 +182,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.tangluyao.biliscope;
+				PRODUCT_BUNDLE_IDENTIFIER = com.terry1238832.biliscope;
 				PRODUCT_NAME = BiliScope;
 				SDKROOT = iphoneos;
 				SWIFT_STRICT_CONCURRENCY = minimal;
@@ -262,7 +262,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.tangluyao.biliscope;
+				PRODUCT_BUNDLE_IDENTIFIER = com.terry1238832.biliscope;
 				PRODUCT_NAME = BiliScope;
 				SDKROOT = iphoneos;
 				SWIFT_STRICT_CONCURRENCY = minimal;
