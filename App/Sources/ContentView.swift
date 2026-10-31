@@ -64,7 +64,7 @@ struct ContentView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else if controller.isRunning {
-                Text("还没看到 B 站流量：如果 B 站已经在播放，说明它没走系统代理。")
+                Text("还没看到 B 站流量：确认小火箭已连接，并且选中了下面的节点。")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -116,9 +116,9 @@ struct ContentView: View {
                 Image(systemName: "questionmark.circle.fill")
                     .foregroundStyle(.yellow)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("B 站 API 走了代理，视频没走")
+                    Text("收到了 B 站连接，但还没有视频")
                         .font(.subheadline.weight(.semibold))
-                    Text("播放器可能用了 QUIC（UDP 443）或自建网络栈，系统 HTTP 代理抓不到这类流量。把日志里的 tunnel 行发我，可以确认它实际连了哪些域名。")
+                    Text("官方 App 的视频不走 Wi-Fi 系统代理，要靠小火箭转发。确认小火箭已连接并使用了教程里的配置，再彻底关掉 B 站重新打开。")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -168,11 +168,12 @@ struct ContentView: View {
 
             Divider().opacity(0.2)
 
-            step(number: 2, title: "把 Wi-Fi 代理指向本机",
-                 detail: "设置 → 无线局域网 → 当前网络 ⓘ → 配置代理 → 手动")
+            step(number: 2, title: "用小火箭转发 B 站流量",
+                 detail: "在小火箭里添加下面这个节点并选中，导入教程里的配置。Wi-Fi 代理保持关闭。")
 
             VStack(alignment: .leading, spacing: 6) {
-                proxyRow("服务器", controller.proxyHost, copyable: true)
+                proxyRow("类型", "HTTP", copyable: false)
+                proxyRow("地址", controller.proxyHost, copyable: true)
                 proxyRow("端口", "\(controller.proxyPort)", copyable: false)
                 proxyRow("认证", "关闭", copyable: false)
             }
@@ -182,18 +183,15 @@ struct ContentView: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text("先启动本 App 再设代理。代理开着时如果 App 被杀掉，整台手机会断网——先关掉代理，再重新打开 App。")
+            Text("本 App 被杀掉后，B 站的视频和封面会加载失败：重新打开本 App，或关掉小火箭的连接开关。")
                 .font(.caption2)
                 .foregroundStyle(.orange)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Button("打开系统设置") { controller.openWiFiSettings() }
-                .buttonStyle(.bordered)
-
             Divider().opacity(0.2)
 
             step(number: 3, title: "打开 B 站 App",
-                 detail: "回到 B 站随便播一个视频，本页日志里出现 accelerated 就说明接管成功。")
+                 detail: "彻底关掉 B 站再打开，播一个视频，本页日志里出现 accelerated 就说明接管成功。")
         }
         .card()
     }

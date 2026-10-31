@@ -368,6 +368,7 @@ private final class MirrorRaceBox: @unchecked Sendable {
     private let lock = NSLock()
     private var finished = false
     private var remaining: Int
+    private var statusError: Error?
     private let continuation: CheckedContinuation<String, Error>
 
     init(count: Int, continuation: CheckedContinuation<String, Error>) {
@@ -387,9 +388,13 @@ private final class MirrorRaceBox: @unchecked Sendable {
         lock.lock()
         guard !finished else { lock.unlock(); return }
         remaining -= 1
+        // A mirror's real answer (say, 403 for an expired link) says more than
+        // another mirror's timeout, and it is what the player needs to see.
+        if case UpstreamClient.Failure.unexpectedStatus = error { statusError = error }
         let exhausted = remaining == 0
         if exhausted { finished = true }
+        let outcome = statusError ?? error
         lock.unlock()
-        if exhausted { continuation.resume(throwing: error) }
+        if exhausted { continuation.resume(throwing: outcome) }
     }
 }

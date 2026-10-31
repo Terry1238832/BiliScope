@@ -225,14 +225,6 @@ final class ProxyController: ObservableObject {
         }
     }
 
-    func openWiFiSettings() {
-        if let url = URL(string: "App-Prefs:root=WIFI"), UIApplication.shared.canOpenURL(url) {
-            UIApplication.shared.open(url)
-        } else if let url = URL(string: UIApplication.openSettingsURLString) {
-            UIApplication.shared.open(url)
-        }
-    }
-
     // MARK: - Self check
 
     func runDiagnostics() {

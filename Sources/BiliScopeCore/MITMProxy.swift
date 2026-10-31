@@ -555,7 +555,9 @@ final class MediaHandler: ChannelInboundHandler {
             transferred += chunk.count
             try await channel.writeAndFlush(ByteBuffer(bytes: chunk)).get()
         }
-        config.log("forward \(host)\(request.path.prefix(80)) \(transferred)B")
+        // The query holds the media signature, which must never reach a shared log.
+        let path = request.path.split(separator: "?", maxSplits: 1).first.map(String.init) ?? ""
+        config.log("forward \(host)\(path.prefix(80)) \(transferred)B")
         try? await channel.close().get()
     }
 
