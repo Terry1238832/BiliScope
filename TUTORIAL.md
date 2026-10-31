@@ -112,20 +112,33 @@ App 里的第 2 步也写着要填的内容：
 <img src="docs/images/app-setup.png" alt="App 里的三步接管说明" width="360">
 </div>
 
-**添加节点**：在小火箭首页点右上角 **+**，填写后保存并选中它。
+**添加节点**：在小火箭首页点右上角 **+**。类型默认是 `Subscribe`，要先点开改成 **HTTP**，然后这样填：
 
 | 项目 | 填写 |
 | --- | --- |
 | 类型 | HTTP |
 | 地址 | `127.0.0.1` |
 | 端口 | `8888` |
-| 用户名和密码 | 留空 |
+| 用户和密码 | 留空 |
 
-**导入配置**：打开底部的**配置**标签，点右上角 **+**，粘贴下面的网址并下载。然后点这份配置，选**使用配置**。
+点右上角**保存**，回到首页确认选中了这个节点。
+
+<div align="center">
+<img src="docs/images/shadowrocket-node.png" alt="小火箭节点设置：类型 HTTP，地址 127.0.0.1，端口 8888" width="320">
+</div>
+
+**导入配置**：打开底部的**配置**标签，点**导入…**（或右上角 **+**），粘贴下面的网址并下载。然后点新出现的 `shadowrocket-biliscope.conf`，选**使用配置**。
 
 ```text
 https://raw.githubusercontent.com/Terry1238832/BiliScope/main/docs/shadowrocket-biliscope.conf
 ```
+
+<div align="center">
+<img src="docs/images/shadowrocket-config.png" alt="小火箭配置页：导入入口和本地文件列表" width="320">
+</div>
+
+> [!WARNING]
+> 上图还没有导入，所以只有自带的 `default.conf`。导入后要确认**对勾在新配置上**：对勾代表正在使用的配置，圆点只代表默认配置。如果对勾还在 `default.conf` 上，加速不会生效。
 
 如果导入失败，也可以把这些规则手动加到小火箭的配置里：
 
@@ -141,7 +154,17 @@ FINAL,DIRECT
 > [!CAUTION]
 > 不要把整个 `akamaized.net` 加进规则，只转发 `upos-*`。否则别的 App 的流量也会被送进代理。
 
-**连接**：回到首页，全局路由选**配置**，打开连接开关。Wi-Fi 设置里的“配置代理”要保持**关闭**。
+**选择全局路由**：回到首页点**全局路由**，选**配置**，这样才会按上面的规则分流。
+
+<div align="center">
+<img src="docs/images/shadowrocket-route.png" alt="小火箭全局路由选择配置" width="320">
+</div>
+
+**连接**：回到首页打开连接开关。Wi-Fi 设置里的“配置代理”要保持**关闭**。连接成功时是这样的：
+
+<div align="center">
+<img src="docs/images/shadowrocket-home.png" alt="小火箭首页：已连接 127.0.0.1:8888，全局路由为配置" width="320">
+</div>
 
 ### 第 5 步：开始看
 
@@ -156,7 +179,7 @@ FINAL,DIRECT
 <img src="docs/images/app-log.png" alt="日志里的 accelerated 记录" width="360">
 </div>
 
-> 这张图和上面的截图都是在模拟器里拍的，界面和真机一样。
+> 「哔哩加速」的截图是在模拟器里拍的，界面和真机一样；小火箭的截图来自真机。
 
 | 日志内容 | 含义 |
 | --- | --- |
