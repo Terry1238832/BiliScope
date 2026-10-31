@@ -152,6 +152,11 @@ struct ContentView: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
+            Text("先启动本 App 再设代理。代理开着时如果 App 被杀掉，整台手机会断网——先关掉代理，再重新打开 App。")
+                .font(.caption2)
+                .foregroundStyle(.orange)
+                .fixedSize(horizontal: false, vertical: true)
+
             Button("打开系统设置") { controller.openWiFiSettings() }
                 .buttonStyle(.bordered)
 

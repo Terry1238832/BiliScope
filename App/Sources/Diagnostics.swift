@@ -20,6 +20,13 @@ final class Diagnostics: NSObject, URLSessionDataDelegate {
 
     func run(completion: @escaping (String) -> Void) {
         self.completion = completion
+        let finished = ResumeBox()
+        // Hard ceiling: no phase may keep the UI on "检测中…" forever.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 50) {
+            finished.once {
+                completion("❌ 诊断整体超时（50s），最后一步卡住了")
+            }
+        }
         Task { [weak self] in
             guard let self else { return }
             var lines: [String] = []
@@ -43,7 +50,9 @@ final class Diagnostics: NSObject, URLSessionDataDelegate {
                 lines.append("❌ \(error)")
             }
             let text = lines.joined(separator: "\n")
-            DispatchQueue.main.async { completion(text) }
+            DispatchQueue.main.async {
+                finished.once { completion(text) }
+            }
         }
     }
 
@@ -52,7 +61,14 @@ final class Diagnostics: NSObject, URLSessionDataDelegate {
         let start = Date()
         do {
             let client = try await UpstreamClient.open(host: host, port: 443, timeout: 8)
-            defer { client.cancel() }
+            let watchdog = Task {
+                try? await Task.sleep(nanoseconds: 10_000_000_000)
+                client.cancel()
+            }
+            defer {
+                watchdog.cancel()
+                client.cancel()
+            }
             try await client.send(Data("GET / HTTP/1.1\r\nHost: \(host)\r\nConnection: close\r\n\r\n".utf8))
             let stream = ResponseStream(client: client)
             let head = try await stream.readHead()
@@ -194,7 +210,10 @@ enum Net {
             }
             connection.start(queue: queue)
             queue.asyncAfter(deadline: .now() + timeout) {
-                box.once { continuation.resume(throwing: NetError.timeout) }
+                box.once {
+                    connection.cancel()
+                    continuation.resume(throwing: NetError.timeout)
+                }
             }
         }
         return connection
@@ -213,20 +232,36 @@ enum Net {
         let deadline = Date().addingTimeInterval(timeout)
         var buffer = Data()
         while buffer.range(of: marker) == nil {
-            guard Date() < deadline else { throw NetError.timeout }
-            guard let chunk = try await receiveOnce(connection) else { throw NetError.closed }
+            let remaining = deadline.timeIntervalSinceNow
+            guard remaining > 0 else {
+                connection.cancel()
+                throw NetError.timeout
+            }
+            guard let chunk = try await receiveOnce(connection, timeout: remaining) else {
+                throw NetError.closed
+            }
             buffer.append(chunk)
         }
         return buffer
     }
 
-    private static func receiveOnce(_ connection: NWConnection) async throws -> Data? {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Data?, Error>) in
+    private static func receiveOnce(_ connection: NWConnection, timeout: TimeInterval) async throws -> Data? {
+        let queue = DispatchQueue(label: "com.biliscope.net.receive")
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Data?, Error>) in
+            let box = ResumeBox()
             connection.receive(minimumIncompleteLength: 1, maximumLength: 16 * 1024) { data, _, complete, error in
-                if let error { continuation.resume(throwing: error) }
-                else if let data, !data.isEmpty { continuation.resume(returning: data) }
-                else if complete { continuation.resume(returning: nil) }
-                else { continuation.resume(returning: Data()) }
+                box.once {
+                    if let error { continuation.resume(throwing: error) }
+                    else if let data, !data.isEmpty { continuation.resume(returning: data) }
+                    else if complete { continuation.resume(returning: nil) }
+                    else { continuation.resume(returning: Data()) }
+                }
+            }
+            queue.asyncAfter(deadline: .now() + timeout) {
+                box.once {
+                    connection.cancel()
+                    continuation.resume(throwing: NetError.timeout)
+                }
             }
         }
     }
