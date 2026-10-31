@@ -28,6 +28,9 @@ public final class MITMProxy {
         /// Optional pin for upstream TLS. Only used by tests and self-signed
         /// origins; production traffic verifies against the system roots.
         public var upstreamTrustRootDER: Data?
+        /// Opt-in troubleshooting: also log hosts that are not Bilibili at all.
+        /// Off by default so normal logs never contain other apps' traffic.
+        public var logForeignHosts: Bool
         public var log: @Sendable (String) -> Void
         public var onEvent: (@Sendable (TrafficEvent) -> Void)?
 
@@ -37,6 +40,7 @@ public final class MITMProxy {
                     chunkSize: Int64 = 2 << 20,
                     allowedClients: ClientAllowlist = ClientAllowlist(),
                     upstreamTrustRootDER: Data? = nil,
+                    logForeignHosts: Bool = false,
                     log: @escaping @Sendable (String) -> Void = { _ in },
                     onEvent: (@Sendable (TrafficEvent) -> Void)? = nil) {
             self.bindHost = bindHost
@@ -45,6 +49,7 @@ public final class MITMProxy {
             self.chunkSize = chunkSize
             self.allowedClients = allowedClients
             self.upstreamTrustRootDER = upstreamTrustRootDER
+            self.logForeignHosts = logForeignHosts
             self.log = log
             self.onEvent = onEvent
         }
@@ -255,6 +260,8 @@ final class FrontDoorHandler: ChannelInboundHandler {
             if route == .blindTunnel {
                 self.config.log("tunnel \(host)")
                 self.config.onEvent?(.tunnel(host: host))
+            } else if self.config.logForeignHosts {
+                self.config.log("pass \(host)")
             }
             return upstream.pipeline.addHandler(RelayHandler(peer: channel))
         }.whenComplete { result in

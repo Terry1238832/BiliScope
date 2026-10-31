@@ -98,6 +98,13 @@ struct ContentView: View {
 
             Toggle("启动 App 时自动开启代理", isOn: $controller.autoStart)
                 .font(.caption)
+
+            Toggle("记录所有域名（排查用）", isOn: $controller.logAllHosts)
+                .font(.caption)
+            Text("开启后日志会记录所有经过代理的域名，仅用于排查，默认关闭。")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .card()
     }

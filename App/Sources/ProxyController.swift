@@ -26,6 +26,14 @@ final class ProxyController: ObservableObject {
     @Published var autoStart: Bool = ProxyController.storedAutoStart() {
         didSet { UserDefaults.standard.set(autoStart, forKey: "autoStart") }
     }
+    @Published var logAllHosts: Bool = UserDefaults.standard.bool(forKey: "logAllHosts") {
+        didSet {
+            UserDefaults.standard.set(logAllHosts, forKey: "logAllHosts")
+            guard oldValue != logAllHosts, isRunning else { return }
+            stop()
+            start()
+        }
+    }
     @Published var bindMode: BindMode = .loopback {
         didSet {
             UserDefaults.standard.set(bindMode.rawValue, forKey: "bindMode")
@@ -47,6 +55,7 @@ final class ProxyController: ObservableObject {
         bindMode = ProxyController.storedBindMode()
         refreshTrust()
         let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("-logall") { logAllHosts = true }
         if arguments.contains("-bindlan") { bindMode = .wifi }
         if arguments.contains("-bindloop") { bindMode = .loopback }
         if arguments.contains("-install") {
@@ -136,6 +145,7 @@ final class ProxyController: ObservableObject {
                                                         concurrency: 8,
                                                         chunkSize: 2 << 20,
                                                         allowedClients: clients,
+                                                        logForeignHosts: logAllHosts,
                                                         log: logger,
                                                         onEvent: onEvent))
             _ = try proxy.start()
