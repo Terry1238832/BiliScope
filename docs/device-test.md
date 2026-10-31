@@ -26,6 +26,15 @@
 6. **播 B 站**：打开 B 站 App，随便点开一个视频，播 10–20 秒。
 7. **回 App**：看「B 站连接 / 加速」计数和日志，点日志右上角分享，发我。
 
+## 装完打不开？
+
+**「Developer App Certificate is not trusted」**：这是**签名证书**没被信任，和根证书是两回事。
+
+设置 → 通用 → VPN 与设备管理 → 开发者 App → 点你的 Apple ID → 信任。英文界面是
+Settings → General → VPN & Device Management → Developer App → 你的邮箱 → Trust。
+
+免费账号签名 7 天过期，到期后重新 Run 一次，必要时再信任一次。
+
 ## 结果怎么读
 
 | 现象 | 含义 | 下一步 |
