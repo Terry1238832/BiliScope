@@ -11,6 +11,7 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     statusCard
                     trustBanner
+                    videoHintBanner
                     setupCard
                     checkCard
                     logCard
@@ -99,6 +100,28 @@ struct ContentView: View {
                 .font(.caption)
         }
         .card()
+    }
+
+    @ViewBuilder
+    private var videoHintBanner: some View {
+        if controller.isRunning && controller.tunnelCount > 0 && controller.acceleratedCount == 0 {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "questionmark.circle.fill")
+                    .foregroundStyle(.yellow)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("B 站 API 走了代理，视频没走")
+                        .font(.subheadline.weight(.semibold))
+                    Text("播放器可能用了 QUIC（UDP 443）或自建网络栈，系统 HTTP 代理抓不到这类流量。把日志里的 tunnel 行发我，可以确认它实际连了哪些域名。")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.yellow.opacity(0.1), in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.yellow.opacity(0.3)))
+        }
     }
 
     @ViewBuilder
