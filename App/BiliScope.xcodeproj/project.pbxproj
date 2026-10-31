@@ -19,7 +19,7 @@
 /* Begin PBXFileReference section */
 		399A27E410755D9AF4A1F0A3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		4B219A2A3C281D3EE442D89B /* AudioKeepAlive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioKeepAlive.swift; sourceTree = "<group>"; };
-		79D317FA1425CC721EE2FAF3 /* BiliScope.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BiliScope.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		79D317FA1425CC721EE2FAF3 /* BiliScope.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BiliScope.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C28CCDCD6741B5FD1D714BE /* ProxyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyController.swift; sourceTree = "<group>"; };
 		843F3563EC74C32FD8922C9B /* bilibilispeedup */ = {isa = PBXFileReference; lastKnownFileType = folder; name = bilibilispeedup; path = ..; sourceTree = SOURCE_ROOT; };
 		C69B41600D884D35324970D1 /* BiliScopeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiliScopeApp.swift; sourceTree = "<group>"; };

@@ -32,11 +32,16 @@ final class Diagnostics: NSObject, URLSessionDataDelegate {
                     .split(separator: "\r\n").first.map(String.init) ?? "?"
                 lines.append("② CONNECT ✅ \(status)")
 
-                let proxied = await self.request(useProxy: true)
-                lines.append("③ HTTPS 经代理 \(proxied)")
+                let videoCDN = "https://upos-sz-mirrorcosov.bilivideo.com/"
+                let proxied = await self.request(url: videoCDN, useProxy: true, timeout: 12, range: false)
+                lines.append("③ 视频 CDN 经代理 \(proxied)")
 
-                let direct = await self.request(useProxy: false)
-                lines.append("④ 直连对照 \(direct)")
+                let direct = await self.request(url: videoCDN, useProxy: false, timeout: 12, range: false)
+                lines.append("④ 视频 CDN 直连 \(direct)")
+
+                let image = await self.request(url: "https://i0.hdslb.com/bfs/face/member/noface.jpg",
+                                               useProxy: false, timeout: 15, range: true)
+                lines.append("⑤ 图片 CDN 直连 \(image)")
             } catch {
                 lines.append("❌ \(error)")
             }
@@ -49,10 +54,10 @@ final class Diagnostics: NSObject, URLSessionDataDelegate {
 
     // MARK: - HTTPS request
 
-    private func request(useProxy: Bool) async -> String {
+    private func request(url: String, useProxy: Bool, timeout: TimeInterval, range: Bool) async -> String {
         let configuration = URLSessionConfiguration.ephemeral
-        configuration.timeoutIntervalForRequest = 20
-        configuration.timeoutIntervalForResource = 25
+        configuration.timeoutIntervalForRequest = timeout
+        configuration.timeoutIntervalForResource = timeout + 5
         if useProxy {
             configuration.connectionProxyDictionary = [
                 "HTTPSEnable": 1,
@@ -64,8 +69,8 @@ final class Diagnostics: NSObject, URLSessionDataDelegate {
         let session = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
         self.session = session
 
-        var request = URLRequest(url: URL(string: "https://i0.hdslb.com/bfs/face/member/noface.jpg")!)
-        request.setValue("bytes=0-2047", forHTTPHeaderField: "Range")
+        var request = URLRequest(url: URL(string: url)!)
+        if range { request.setValue("bytes=0-2047", forHTTPHeaderField: "Range") }
         request.setValue("https://www.bilibili.com/", forHTTPHeaderField: "Referer")
         request.setValue("Mozilla/5.0", forHTTPHeaderField: "User-Agent")
 
@@ -82,7 +87,7 @@ final class Diagnostics: NSObject, URLSessionDataDelegate {
                     }
                     continuation.resume(returning: "❌ \(error.code) \(hint)")
                 } else if let http = response as? HTTPURLResponse {
-                    continuation.resume(returning: "✅ \(http.statusCode)，\(data?.count ?? 0) 字节，\(cost)ms")
+                    continuation.resume(returning: "✅ 可达，HTTP \(http.statusCode)，\(data?.count ?? 0) 字节，\(cost)ms")
                 } else {
                     continuation.resume(returning: "❌ 没有 HTTP 响应")
                 }
