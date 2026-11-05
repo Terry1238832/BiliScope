@@ -26,7 +26,7 @@ iOS/本地版「B 站流量接管」实验项目：只处理 B 站域名，其�
 HTTPS 连接做本地终止，然后把播放器的每个 `Range` 请求拆成多个并发分片下载，
 按顺序拼回给播放器。B 站 API、登录、其他网站都不解密。
 
-- **只接管白名单**：`HostPolicy` 是硬编码的 B 站域名表，命中不了的域名只做 TCP
+- **只接管白名单**：`HostPolicy` 是硬编码的媒体域名表（完整列表见 [docs/shadowrocket-biliscope.conf](docs/shadowrocket-biliscope.conf)），命中不了的域名只做 TCP
   盲转发：不解密、不解析、不记录，日志里连域名都不会出现。代码里没有任何
   「全量代理」开关。
 - **多连接预读**：播放器一次只要约 1 MB，切它的请求没有意义。`MediaSession` 按
@@ -36,8 +36,8 @@ HTTPS 连接做本地终止，然后把播放器的每个 `Range` 请求拆成�
 - **多 CDN 镜像竞速**：B 站同一个签名分片在 `upos-*-mirror*.bilivideo.com`
   多个镜像上内容完全一致（已实测 sha256 相同）。代理会同时向所有镜像要
   1 MB 首片，谁先回来就用谁，并在 5 分钟内记住赢家。海外常见的 Akamai 分片
-  （`upos-<region>-mirrorakam.akamaized.net`）也会一起竞速，不会因为被分到
-  Akamai 就失去加速。
+  `upos-hz-mirrorakam.akamaized.net` 也会一起竞速；它只按完整域名匹配，其他
+  `akamaized.net` 主机一律不碰。
 - **本地 CA**：首次运行生成根证书，iOS 通过 `.mobileconfig` 安装并信任。
 
 ## 当前状态
@@ -106,7 +106,7 @@ sha256     : 完全一致
   第一批字节，再按 `Host` 头或 TLS 的 SNI 判断要不要接管；
 - 小火箭开启时，系统 DNS 返回假 IP（`198.18.x.x`），域名连接还会被送进回环。代理的上行必须指定
   物理网卡（`requiredInterfaceType`），只禁止 VPN 网卡仍然会循环；
-- 不要把整个 `akamaized.net` 转给代理，只转 `upos-*`；
+- 不要把整个 `akamaized.net` 转给代理，只完整匹配 `upos-hz-mirrorakam.akamaized.net`；
 - 代理被杀掉后，小火箭转发的 B 站封面和视频会失败，关掉小火箭的连接开关即可恢复。
 
 ## 退路：Mac 常开 + 局域网代理

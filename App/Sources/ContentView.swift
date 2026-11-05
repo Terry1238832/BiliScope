@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import BiliScopeCore
 
 struct ContentView: View {
     @EnvironmentObject private var controller: ProxyController
@@ -255,11 +256,14 @@ struct ContentView: View {
     private var scopeCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("接管范围").font(.headline)
-            Text("只会终止以下 B 站媒体域名的 TLS：")
+            Text("只会终止以下媒体域名（含子域名）的 TLS：")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Text("*.bilivideo.com  *.bilivideo.cn  *.hdslb.com  *.bilicdn.com")
+            Text((HostPolicy.defaultMediaDomains + HostPolicy.exactMediaHosts).joined(separator: "  "))
                 .font(.system(size: 11, design: .monospaced))
+            Text("最后一个只匹配这一个完整域名。")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
             Text("其他任何域名（包括 B 站 API、其他 App、其他网站）只做 TCP 字节转发，不解密、不解析、不记录。")
                 .font(.caption)
                 .foregroundStyle(.secondary)

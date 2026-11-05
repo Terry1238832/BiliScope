@@ -144,15 +144,26 @@ https://raw.githubusercontent.com/Terry1238832/BiliScope/main/docs/shadowrocket-
 
 ```text
 AND,((PROTOCOL,UDP),(DEST-PORT,443)),REJECT
-DOMAIN-SUFFIX,bilivideo.com,PROXY
+DOMAIN-SUFFIX,bilicdn.com,PROXY
+DOMAIN-SUFFIX,bilicdn1.com,PROXY
+DOMAIN-SUFFIX,bilicdn2.com,PROXY
+DOMAIN-SUFFIX,bilicdn3.com,PROXY
+DOMAIN-SUFFIX,bilicdn4.com,PROXY
+DOMAIN-SUFFIX,bilicdn5.com,PROXY
+DOMAIN-SUFFIX,biliimg.com,PROXY
 DOMAIN-SUFFIX,bilivideo.cn,PROXY
+DOMAIN-SUFFIX,bilivideo.com,PROXY
+DOMAIN-SUFFIX,bilivideo.net,PROXY
 DOMAIN-SUFFIX,hdslb.com,PROXY
-DOMAIN-KEYWORD,upos-,PROXY
+DOMAIN-SUFFIX,hdslb.org,PROXY
+DOMAIN-SUFFIX,maoercdn.com,PROXY
+DOMAIN-SUFFIX,mincdn.com,PROXY
+DOMAIN,upos-hz-mirrorakam.akamaized.net,PROXY
 FINAL,DIRECT
 ```
 
 > [!CAUTION]
-> 不要把整个 `akamaized.net` 加进规则，只转发 `upos-*`。否则别的 App 的流量也会被送进代理。
+> 不要把整个 `akamaized.net` 加进规则，只用 `DOMAIN` 完整匹配 `upos-hz-mirrorakam.akamaized.net`。否则别的 App 的流量也会被送进代理。
 
 **选择全局路由**：回到首页点**全局路由**，选**配置**，这样才会按上面的规则分流。
 
@@ -218,7 +229,7 @@ flowchart TD
 
 ### 接管范围
 
-只有以下域名会被接管：`*.bilivideo.com`、`*.bilivideo.cn`、`*.hdslb.com`、`*.bilicdn.com`，以及 `upos-*-mirror*.akamaized.net`。
+只有以下媒体域名及其子域名会被接管：`bilicdn.com`、`bilicdn1.com`、`bilicdn2.com`、`bilicdn3.com`、`bilicdn4.com`、`bilicdn5.com`、`biliimg.com`、`bilivideo.cn`、`bilivideo.com`、`bilivideo.net`、`hdslb.com`、`hdslb.org`、`maoercdn.com`、`mincdn.com`。另外还有 `upos-hz-mirrorakam.akamaized.net`，它只按完整域名匹配，不包括子域名。
 
 其他域名（包括 B 站 API、其他 App 和其他网站）如果进了代理，也只做字节转发，不解密、不解析。域名白名单写死在代码里，不能在运行时添加。
 

@@ -54,7 +54,7 @@ func run() throws {
                                                 log: logger))
     let actual = try proxy.start()
     print("proxy      : http://\(bindHost == "0.0.0.0" ? "127.0.0.1" : bindHost):\(actual)")
-    print("accelerate : \(HostPolicy.defaultMediaDomains.joined(separator: ", ")) + upos-*-mirror*.akamaized.net")
+    print("accelerate : \((HostPolicy.defaultMediaDomains + HostPolicy.exactMediaHosts).joined(separator: ", "))")
 
     if lanMode {
         let lanIP = LocalAddresses.ipv4().first { $0 != "127.0.0.1" } ?? "<本机局域网 IP>"

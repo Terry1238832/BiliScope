@@ -16,24 +16,36 @@ public enum HostRoute: Equatable, Sendable {
 /// registered domains (or one of their subdomains) is `passthrough`. There is no
 /// "catch all" mode and no way to add a non-Bilibili domain at runtime.
 public struct HostPolicy: Sendable {
-    /// Domains owned by Bilibili. Keep this list short and explicit.
+    /// Domains the proxy may handle at all. Keep this list short and explicit.
     public static let defaultDomains: [String] = [
         "bilibili.com",
         "bilibili.tv",
-        "bilivideo.com",
-        "bilivideo.cn",
-        "hdslb.com",
         "biliapi.net",
         "biliapi.com",
+    ] + defaultMediaDomains
+
+    /// Media/CDN domains, each with all of its subdomains, where we terminate
+    /// TLS to rewrite Range downloads.
+    public static let defaultMediaDomains: [String] = [
         "bilicdn.com",
+        "bilicdn1.com",
+        "bilicdn2.com",
+        "bilicdn3.com",
+        "bilicdn4.com",
+        "bilicdn5.com",
+        "biliimg.com",
+        "bilivideo.cn",
+        "bilivideo.com",
+        "bilivideo.net",
+        "hdslb.com",
+        "hdslb.org",
+        "maoercdn.com",
+        "mincdn.com",
     ]
 
-    /// Media/CDN hosts where we terminate TLS to rewrite Range downloads.
-    public static let defaultMediaDomains: [String] = [
-        "bilivideo.com",
-        "bilivideo.cn",
-        "hdslb.com",
-        "bilicdn.com",
+    /// Media hosts taken over only on an exact match, never their subdomains.
+    public static let exactMediaHosts: [String] = [
+        "upos-hz-mirrorakam.akamaized.net",
     ]
 
     public let domains: [String]
@@ -58,12 +70,10 @@ public struct HostPolicy: Sendable {
         return matches(host, in: mediaDomains) ? .accelerate : .blindTunnel
     }
 
-    /// Bilibili's Akamai mirror uses a Bilibili-specific hostname
-    /// (`upos-<region>-mirrorakam.akamaized.net`). It is matched by shape, not by
-    /// adding `akamaized.net` to the allow-list, so other Akamai traffic is
-    /// never touched.
+    /// Bilibili's Akamai mirror lives under the shared `akamaized.net`, so it is
+    /// matched exactly: no other Akamai host, and none of its subdomains, is touched.
     static func isBilibiliAkamaiMirror(_ host: String) -> Bool {
-        host.hasSuffix(".akamaized.net") && host.hasPrefix("upos-") && host.contains("-mirror")
+        exactMediaHosts.contains(normalize(host))
     }
 
     public func isBilibili(_ rawHost: String) -> Bool {

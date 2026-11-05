@@ -23,11 +23,25 @@ final class HostPolicyTests: XCTestCase {
         XCTAssertEqual(policy.route(for: ""), .passthrough)
     }
 
-    func testBilibiliAkamaiMirrorIsAccelerated() {
+    func testBilibiliAkamaiMirrorIsMatchedExactly() {
         XCTAssertEqual(policy.route(for: "upos-hz-mirrorakam.akamaized.net"), .accelerate)
-        XCTAssertEqual(policy.route(for: "upos-sz-mirrorakam.akamaized.net"), .accelerate)
+        XCTAssertEqual(policy.route(for: "UPOS-HZ-MIRRORAKAM.akamaized.net.:443"), .accelerate)
+        XCTAssertEqual(policy.route(for: "upos-sz-mirrorakam.akamaized.net"), .passthrough)
+        XCTAssertEqual(policy.route(for: "x.upos-hz-mirrorakam.akamaized.net"), .passthrough)
         XCTAssertEqual(policy.route(for: "foo.akamaized.net"), .passthrough)
         XCTAssertEqual(policy.route(for: "upos-evil.akamaized.net"), .passthrough)
+    }
+
+    func testMediaDomainsCoverThemselvesAndSubdomains() {
+        let hosts = ["bilicdn1.com", "x.bilicdn3.com", "a.b.bilicdn5.com", "i0.biliimg.com",
+                     "bilivideo.net", "upos.bilivideo.net", "hdslb.org", "i0.hdslb.org",
+                     "a.maoercdn.com", "mincdn.com", "x.mincdn.com"]
+        for host in hosts {
+            XCTAssertEqual(policy.route(for: host), .accelerate, host)
+        }
+        for host in ["bilicdn6.com", "hdslb.org.evil.com", "notmincdn.com", "maoercdn.co"] {
+            XCTAssertEqual(policy.route(for: host), .passthrough, host)
+        }
     }
 
     func testNonMediaBilibiliHostsAreBlind() {

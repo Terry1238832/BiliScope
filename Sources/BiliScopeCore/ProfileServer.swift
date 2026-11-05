@@ -96,8 +96,8 @@ public final class ProfileServer {
             p{color:#9aa0aa} code{background:#1c1f26;padding:2px 6px;border-radius:6px}
             </style>
             <h1>哔哩加速 · 根证书</h1>
-            <p>这个证书只用于解密 B 站视频 CDN 的流量（<code>*.bilivideo.com</code>、<code>*.hdslb.com</code>），
-            其他网站不会被解密。</p>
+            <p>这个证书只用于解密 B 站视频和图片 CDN 的流量（如 <code>*.bilivideo.com</code>、<code>*.hdslb.com</code>，
+            完整列表见 App 的「接管范围」），其他网站不会被解密。</p>
             <a href="/ca.mobileconfig">安装根证书</a>
             <p>安装后回到「设置 → 通用 → 关于本机 → 证书信任设置」，把 BiliScope Root CA 的完全信任打开。</p>
             """
