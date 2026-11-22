@@ -7,34 +7,106 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		037AD9266BB4125454D010B6 /* VPNController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC3360E957C7A514F6E8B32 /* VPNController.swift */; };
+		07EF983B7B89877BE8A5CA1C /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E505DC641432D553CB86860C /* PacketTunnelProvider.swift */; };
 		0B61462454841DF7CB444149 /* CertificateTrust.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFD6CBD9A3E26A5D411691A0 /* CertificateTrust.swift */; };
+		21FDF4FA7EA2F302FA72BD0D /* ProxyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C28CCDCD6741B5FD1D714BE /* ProxyController.swift */; };
+		2482AC358CA856F09FD20636 /* AudioKeepAlive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B219A2A3C281D3EE442D89B /* AudioKeepAlive.swift */; };
 		24A61D4D5524A492A285DE28 /* Diagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6BD9ABA7355E96B31264E69 /* Diagnostics.swift */; };
-		2F816AD71524BD846D307D1A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 399A27E410755D9AF4A1F0A3 /* ContentView.swift */; };
+		373A1507E5CDB0DAD95ADD83 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A8AF33E61D21BDDEA9A59F7 /* Assets.xcassets */; };
 		3EA67E4665920F2D4D57C9C9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A8AF33E61D21BDDEA9A59F7 /* Assets.xcassets */; };
+		60AEA633817F581C09C40C46 /* TunnelShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D6E78FC34F3F3363815C88E /* TunnelShared.swift */; };
 		60D43FCED3060BCA86EE54B8 /* AudioKeepAlive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B219A2A3C281D3EE442D89B /* AudioKeepAlive.swift */; };
+		6ED9683567CE41E17A474F49 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4C718E2BDF542032191EE22 /* HomeView.swift */; };
+		70357E448F2744836C9698E2 /* BiliScopeCore in Frameworks */ = {isa = PBXBuildFile; productRef = 2D9CCE08E87E4953E0E5231E /* BiliScopeCore */; };
+		721CD5F9C5AFDDAE5EC3535D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5D143B0D84295C7E074E52D /* SettingsView.swift */; };
+		7493FFCCF846FB9D923EC684 /* TunnelShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D6E78FC34F3F3363815C88E /* TunnelShared.swift */; };
+		786D50C5ECC57EA0BDD19AE5 /* BiliScopeTunnel.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AFBEB84BC4BE1F997C4088B3 /* BiliScopeTunnel.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		87C6E299EC28CB736D7640C7 /* CertificateTrust.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFD6CBD9A3E26A5D411691A0 /* CertificateTrust.swift */; };
+		89E40B756FFA24A4B3D07411 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4C718E2BDF542032191EE22 /* HomeView.swift */; };
+		962F28AF0ABAF0C29C3DB890 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5D143B0D84295C7E074E52D /* SettingsView.swift */; };
 		96D2A20C6A64F4FBA0267503 /* ProxyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C28CCDCD6741B5FD1D714BE /* ProxyController.swift */; };
 		A7F6018668FDF30E54231358 /* BiliScopeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C69B41600D884D35324970D1 /* BiliScopeApp.swift */; };
+		AA20746CCFF10D8C95561DCB /* BiliScopeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C69B41600D884D35324970D1 /* BiliScopeApp.swift */; };
+		AC94EC2230DB8A96CFBA3E75 /* HevSocks5Tunnel.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30C50A520DEAD1570E2CC3E6 /* HevSocks5Tunnel.xcframework */; };
+		C37B00E1386730162F93625E /* BiliScopeCore in Frameworks */ = {isa = PBXBuildFile; productRef = DA3F5AA0852B3119DA30E880 /* BiliScopeCore */; };
+		CC5DE5F0A51F409B48A2F4EB /* Diagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6BD9ABA7355E96B31264E69 /* Diagnostics.swift */; };
+		F3A1098174C6A861B1007DA1 /* HevTunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E3ED11325629A53AC8F3105 /* HevTunnel.swift */; };
+		F42C70C17A1800453A936C57 /* TunnelShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D6E78FC34F3F3363815C88E /* TunnelShared.swift */; };
+		FA447BE3C73C66116A8704F6 /* VPNController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC3360E957C7A514F6E8B32 /* VPNController.swift */; };
 		FA6515A9C59A7BF3014CDEA1 /* BiliScopeCore in Frameworks */ = {isa = PBXBuildFile; productRef = 67967C746198B3E4D3938831 /* BiliScopeCore */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		E1FAA86762CC40AEFC9D4919 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C507E60D39E771B84C4CEC98 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7F2E32116EF0E1C87FB9D4EE;
+			remoteInfo = BiliScopeTunnel;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		2DD98F3E21A2DAA24D351C3F /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				786D50C5ECC57EA0BDD19AE5 /* BiliScopeTunnel.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		399A27E410755D9AF4A1F0A3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		2E3ED11325629A53AC8F3105 /* HevTunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HevTunnel.swift; sourceTree = "<group>"; };
+		30C50A520DEAD1570E2CC3E6 /* HevSocks5Tunnel.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = HevSocks5Tunnel.xcframework; path = Vendor/HevSocks5Tunnel.xcframework; sourceTree = "<group>"; };
+		349D5CE68BE4E0808DC293B4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		3A8AF33E61D21BDDEA9A59F7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4B219A2A3C281D3EE442D89B /* AudioKeepAlive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioKeepAlive.swift; sourceTree = "<group>"; };
+		6D6E78FC34F3F3363815C88E /* TunnelShared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelShared.swift; sourceTree = "<group>"; };
+		71EE3F18BD5D02E6A5A558E4 /* BiliScopeTunnel-Bridging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BiliScopeTunnel-Bridging.h"; sourceTree = "<group>"; };
 		79D317FA1425CC721EE2FAF3 /* BiliScope.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BiliScope.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C28CCDCD6741B5FD1D714BE /* ProxyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyController.swift; sourceTree = "<group>"; };
 		843F3563EC74C32FD8922C9B /* bilibilispeedup */ = {isa = PBXFileReference; lastKnownFileType = folder; name = bilibilispeedup; path = ..; sourceTree = SOURCE_ROOT; };
+		AAC3360E957C7A514F6E8B32 /* VPNController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNController.swift; sourceTree = "<group>"; };
+		AFBEB84BC4BE1F997C4088B3 /* BiliScopeTunnel.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = BiliScopeTunnel.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C4C718E2BDF542032191EE22 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		C5D143B0D84295C7E074E52D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		C69B41600D884D35324970D1 /* BiliScopeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiliScopeApp.swift; sourceTree = "<group>"; };
 		C6BD9ABA7355E96B31264E69 /* Diagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Diagnostics.swift; sourceTree = "<group>"; };
 		CFD6CBD9A3E26A5D411691A0 /* CertificateTrust.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CertificateTrust.swift; sourceTree = "<group>"; };
+		D3E2DF2BAAE7DDD0D9A89FEC /* BiliScopeLite.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BiliScopeLite.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E505DC641432D553CB86860C /* PacketTunnelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PacketTunnelProvider.swift; sourceTree = "<group>"; };
+		EB9BDD864A3DCDEA2AFBCD68 /* BiliScopeTunnel.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BiliScopeTunnel.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		0C05BC0E8E3F80994FEB2588 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C37B00E1386730162F93625E /* BiliScopeCore in Frameworks */,
+				AC94EC2230DB8A96CFBA3E75 /* HevSocks5Tunnel.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7B62CD4BE334EDD509D78817 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				FA6515A9C59A7BF3014CDEA1 /* BiliScopeCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1786E076857345C8AFDE6B6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				70357E448F2744836C9698E2 /* BiliScopeCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -48,9 +120,11 @@
 				4B219A2A3C281D3EE442D89B /* AudioKeepAlive.swift */,
 				C69B41600D884D35324970D1 /* BiliScopeApp.swift */,
 				CFD6CBD9A3E26A5D411691A0 /* CertificateTrust.swift */,
-				399A27E410755D9AF4A1F0A3 /* ContentView.swift */,
 				C6BD9ABA7355E96B31264E69 /* Diagnostics.swift */,
+				C4C718E2BDF542032191EE22 /* HomeView.swift */,
 				7C28CCDCD6741B5FD1D714BE /* ProxyController.swift */,
+				C5D143B0D84295C7E074E52D /* SettingsView.swift */,
+				AAC3360E957C7A514F6E8B32 /* VPNController.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -63,10 +137,20 @@
 			name = Packages;
 			sourceTree = "<group>";
 		};
+		4A6EBE287BA8845CD45259D4 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				30C50A520DEAD1570E2CC3E6 /* HevSocks5Tunnel.xcframework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		6C326E15A0C506BB2E4E0D4C /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				79D317FA1425CC721EE2FAF3 /* BiliScope.app */,
+				D3E2DF2BAAE7DDD0D9A89FEC /* BiliScopeLite.app */,
+				AFBEB84BC4BE1F997C4088B3 /* BiliScopeTunnel.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -75,14 +159,56 @@
 			isa = PBXGroup;
 			children = (
 				1601171E7F893B4C7FBA6FDC /* Packages */,
+				BA0A97353EDA7FFB6399CFD0 /* Shared */,
 				1028A61F6F234082E0ECC8F6 /* Sources */,
+				D2BB7E5AEDEE7A5AC8D05ED0 /* Tunnel */,
+				4A6EBE287BA8845CD45259D4 /* Frameworks */,
 				6C326E15A0C506BB2E4E0D4C /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		BA0A97353EDA7FFB6399CFD0 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				6D6E78FC34F3F3363815C88E /* TunnelShared.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		D2BB7E5AEDEE7A5AC8D05ED0 /* Tunnel */ = {
+			isa = PBXGroup;
+			children = (
+				71EE3F18BD5D02E6A5A558E4 /* BiliScopeTunnel-Bridging.h */,
+				EB9BDD864A3DCDEA2AFBCD68 /* BiliScopeTunnel.entitlements */,
+				2E3ED11325629A53AC8F3105 /* HevTunnel.swift */,
+				349D5CE68BE4E0808DC293B4 /* Info.plist */,
+				E505DC641432D553CB86860C /* PacketTunnelProvider.swift */,
+			);
+			path = Tunnel;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		7F2E32116EF0E1C87FB9D4EE /* BiliScopeTunnel */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 523B7518889CE10C3D5A0CA8 /* Build configuration list for PBXNativeTarget "BiliScopeTunnel" */;
+			buildPhases = (
+				09725873F2A686C8C8116D58 /* Sources */,
+				0C05BC0E8E3F80994FEB2588 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BiliScopeTunnel;
+			packageProductDependencies = (
+				DA3F5AA0852B3119DA30E880 /* BiliScopeCore */,
+			);
+			productName = BiliScopeTunnel;
+			productReference = AFBEB84BC4BE1F997C4088B3 /* BiliScopeTunnel.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		CFDED198AF454BAEB29DE5CF /* BiliScope */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = CB8499AF1C0A2362A4C87862 /* Build configuration list for PBXNativeTarget "BiliScope" */;
@@ -90,10 +216,12 @@
 				07C0D57C9DA81206C5B9D594 /* Sources */,
 				F0B92CA1ED8239564B6179A0 /* Resources */,
 				7B62CD4BE334EDD509D78817 /* Frameworks */,
+				2DD98F3E21A2DAA24D351C3F /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				C14801677A408F5A1AAAF7E8 /* PBXTargetDependency */,
 			);
 			name = BiliScope;
 			packageProductDependencies = (
@@ -101,6 +229,26 @@
 			);
 			productName = BiliScope;
 			productReference = 79D317FA1425CC721EE2FAF3 /* BiliScope.app */;
+			productType = "com.apple.product-type.application";
+		};
+		F027B0800056AA106453517A /* BiliScopeLite */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7F3B78D82833469107FFEEEE /* Build configuration list for PBXNativeTarget "BiliScopeLite" */;
+			buildPhases = (
+				B84DBD84F9D73376AECECA52 /* Sources */,
+				2BDF0652280B2A1C121F7C58 /* Resources */,
+				E1786E076857345C8AFDE6B6 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BiliScopeLite;
+			packageProductDependencies = (
+				2D9CCE08E87E4953E0E5231E /* BiliScopeCore */,
+			);
+			productName = BiliScopeLite;
+			productReference = D3E2DF2BAAE7DDD0D9A89FEC /* BiliScopeLite.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -112,7 +260,15 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					7F2E32116EF0E1C87FB9D4EE = {
+						ProvisioningStyle = Automatic;
+						SystemCapabilities = "[\"com.apple.NetworkExtensions.iOS\": [\"enabled\": 1]]";
+					};
 					CFDED198AF454BAEB29DE5CF = {
+						ProvisioningStyle = Automatic;
+						SystemCapabilities = "[\"com.apple.NetworkExtensions.iOS\": [\"enabled\": 1]]";
+					};
+					F027B0800056AA106453517A = {
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -135,11 +291,21 @@
 			projectRoot = "";
 			targets = (
 				CFDED198AF454BAEB29DE5CF /* BiliScope */,
+				F027B0800056AA106453517A /* BiliScopeLite */,
+				7F2E32116EF0E1C87FB9D4EE /* BiliScopeTunnel */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		2BDF0652280B2A1C121F7C58 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				373A1507E5CDB0DAD95ADD83 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F0B92CA1ED8239564B6179A0 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -158,19 +324,57 @@
 				60D43FCED3060BCA86EE54B8 /* AudioKeepAlive.swift in Sources */,
 				A7F6018668FDF30E54231358 /* BiliScopeApp.swift in Sources */,
 				0B61462454841DF7CB444149 /* CertificateTrust.swift in Sources */,
-				2F816AD71524BD846D307D1A /* ContentView.swift in Sources */,
 				24A61D4D5524A492A285DE28 /* Diagnostics.swift in Sources */,
+				89E40B756FFA24A4B3D07411 /* HomeView.swift in Sources */,
 				96D2A20C6A64F4FBA0267503 /* ProxyController.swift in Sources */,
+				962F28AF0ABAF0C29C3DB890 /* SettingsView.swift in Sources */,
+				60AEA633817F581C09C40C46 /* TunnelShared.swift in Sources */,
+				037AD9266BB4125454D010B6 /* VPNController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		09725873F2A686C8C8116D58 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F3A1098174C6A861B1007DA1 /* HevTunnel.swift in Sources */,
+				07EF983B7B89877BE8A5CA1C /* PacketTunnelProvider.swift in Sources */,
+				F42C70C17A1800453A936C57 /* TunnelShared.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B84DBD84F9D73376AECECA52 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2482AC358CA856F09FD20636 /* AudioKeepAlive.swift in Sources */,
+				AA20746CCFF10D8C95561DCB /* BiliScopeApp.swift in Sources */,
+				87C6E299EC28CB736D7640C7 /* CertificateTrust.swift in Sources */,
+				CC5DE5F0A51F409B48A2F4EB /* Diagnostics.swift in Sources */,
+				6ED9683567CE41E17A474F49 /* HomeView.swift in Sources */,
+				21FDF4FA7EA2F302FA72BD0D /* ProxyController.swift in Sources */,
+				721CD5F9C5AFDDAE5EC3535D /* SettingsView.swift in Sources */,
+				7493FFCCF846FB9D923EC684 /* TunnelShared.swift in Sources */,
+				FA447BE3C73C66116A8704F6 /* VPNController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C14801677A408F5A1AAAF7E8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7F2E32116EF0E1C87FB9D4EE /* BiliScopeTunnel */;
+			targetProxy = E1FAA86762CC40AEFC9D4919 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		080D241E20324C68691C49F0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = BiliScope.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -187,9 +391,33 @@
 				SDKROOT = iphoneos;
 				SWIFT_STRICT_CONCURRENCY = minimal;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
+		};
+		0FE47F587EDFCD876CC6E57F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				INFOPLIST_FILE = Lite/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.terry1238832.biliscope.lite;
+				PRODUCT_NAME = BiliScopeLite;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
 		};
 		172F5CC76C4CE2FBE8D6FB37 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -251,6 +479,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = BiliScope.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -267,9 +496,67 @@
 				SDKROOT = iphoneos;
 				SWIFT_STRICT_CONCURRENCY = minimal;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
+		};
+		8B0A313DE75032F33F65C062 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Tunnel/BiliScopeTunnel.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"Vendor\"",
+				);
+				INFOPLIST_FILE = Tunnel/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.terry1238832.biliscope.tunnel;
+				PRODUCT_NAME = BiliScopeTunnel;
+				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "Tunnel/BiliScopeTunnel-Bridging.h";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E97AA9E63D849C8BC8330D96 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Tunnel/BiliScopeTunnel.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"Vendor\"",
+				);
+				INFOPLIST_FILE = Tunnel/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.terry1238832.biliscope.tunnel;
+				PRODUCT_NAME = BiliScopeTunnel;
+				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "Tunnel/BiliScopeTunnel-Bridging.h";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
 		};
 		EF01E636EDDE5280AA435C0A /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -334,9 +621,51 @@
 			};
 			name = Debug;
 		};
+		F2E802CD1A1BD276D44F525C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				INFOPLIST_FILE = Lite/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.terry1238832.biliscope.lite;
+				PRODUCT_NAME = BiliScopeLite;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		523B7518889CE10C3D5A0CA8 /* Build configuration list for PBXNativeTarget "BiliScopeTunnel" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8B0A313DE75032F33F65C062 /* Debug */,
+				E97AA9E63D849C8BC8330D96 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7F3B78D82833469107FFEEEE /* Build configuration list for PBXNativeTarget "BiliScopeLite" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0FE47F587EDFCD876CC6E57F /* Debug */,
+				F2E802CD1A1BD276D44F525C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		CB8499AF1C0A2362A4C87862 /* Build configuration list for PBXNativeTarget "BiliScope" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -365,7 +694,15 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		2D9CCE08E87E4953E0E5231E /* BiliScopeCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = BiliScopeCore;
+		};
 		67967C746198B3E4D3938831 /* BiliScopeCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = BiliScopeCore;
+		};
+		DA3F5AA0852B3119DA30E880 /* BiliScopeCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = BiliScopeCore;
 		};

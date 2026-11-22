@@ -13,8 +13,18 @@ targets:
   BiliScope:
     type: application
     platform: iOS
+    attributes:
+      SystemCapabilities:
+        com.apple.NetworkExtensions.iOS:
+          enabled: 1
     sources:
       - path: Sources
+      - path: Shared
+    entitlements:
+      path: BiliScope.entitlements
+      properties:
+        com.apple.developer.networking.networkextension:
+          - packet-tunnel-provider
     info:
       path: Info.plist
       properties:
@@ -27,6 +37,11 @@ targets:
         UIApplicationSupportsIndirectInputEvents: true
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
         NSLocalNetworkUsageDescription: 仅在本机运行 B 站专用代理，不访问局域网内的其他设备。
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
@@ -41,10 +56,102 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.0"
         SWIFT_STRICT_CONCURRENCY: minimal
-        TARGETED_DEVICE_FAMILY: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
         CODE_SIGN_STYLE: Automatic
         ENABLE_USER_SCRIPT_SANDBOXING: NO
         IPHONEOS_DEPLOYMENT_TARGET: "17.0"
     dependencies:
       - package: BiliScope
         product: BiliScopeCore
+      - target: BiliScopeTunnel
+
+  # The Shadowrocket route for free accounts: a Personal Team cannot sign the
+  # packet tunnel, so this target leaves the extension and its entitlement out.
+  BiliScopeLite:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: Shared
+    info:
+      path: Lite/Info.plist
+      properties:
+        CFBundleDisplayName: 哔哩加速
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        UIBackgroundModes:
+          - audio
+        UILaunchScreen: {}
+        UIApplicationSupportsIndirectInputEvents: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSLocalNetworkUsageDescription: 仅在本机运行 B 站专用代理，不访问局域网内的其他设备。
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.terry1238832.biliscope.lite
+        PRODUCT_NAME: BiliScopeLite
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.0"
+        SWIFT_STRICT_CONCURRENCY: minimal
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGN_STYLE: Automatic
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    dependencies:
+      - package: BiliScope
+        product: BiliScopeCore
+
+  BiliScopeTunnel:
+    type: app-extension
+    platform: iOS
+    attributes:
+      SystemCapabilities:
+        com.apple.NetworkExtensions.iOS:
+          enabled: 1
+    sources:
+      - path: Tunnel
+      - path: Shared
+    entitlements:
+      path: Tunnel/BiliScopeTunnel.entitlements
+      properties:
+        com.apple.developer.networking.networkextension:
+          - packet-tunnel-provider
+    info:
+      path: Tunnel/Info.plist
+      properties:
+        CFBundleDisplayName: 哔哩加速
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.networkextension.packet-tunnel
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).PacketTunnelProvider
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.terry1238832.biliscope.tunnel
+        PRODUCT_NAME: BiliScopeTunnel
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.0"
+        SWIFT_STRICT_CONCURRENCY: minimal
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGN_STYLE: Automatic
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SWIFT_OBJC_BRIDGING_HEADER: Tunnel/BiliScopeTunnel-Bridging.h
+        IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    dependencies:
+      - package: BiliScope
+        product: BiliScopeCore
+      # hev-socks5-tunnel, built from source by scripts/build-hev-xcframework.sh.
+      - framework: Vendor/HevSocks5Tunnel.xcframework
+        embed: false

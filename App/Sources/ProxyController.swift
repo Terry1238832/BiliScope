@@ -81,7 +81,9 @@ final class ProxyController: ObservableObject {
     }
 
     private static func storedAutoStart() -> Bool {
-        if UserDefaults.standard.object(forKey: "autoStart") == nil { return true }
+        // Only the Shadowrocket build needs the app's own proxy running; with the
+        // built-in VPN it would just cost battery.
+        if UserDefaults.standard.object(forKey: "autoStart") == nil { return !TunnelShared.hasTunnel }
         return UserDefaults.standard.bool(forKey: "autoStart")
     }
 
@@ -103,8 +105,7 @@ final class ProxyController: ObservableObject {
             return URL(fileURLWithPath: arguments[index + 1], isDirectory: true)
         }
         #endif
-        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        return base.appendingPathComponent("BiliScope", isDirectory: true)
+        return TunnelShared.appCADirectory
     }
 
     var caPath: String { caDirectory.appendingPathComponent("ca-cert.pem").path }
@@ -227,14 +228,15 @@ final class ProxyController: ObservableObject {
 
     // MARK: - Self check
 
-    func runDiagnostics() {
-        guard isRunning, let ca = try? CertificateAuthority(directory: caDirectory) else {
-            selfCheckText = "请先启动代理"
+    /// Checks the app's own proxy, or the packet tunnel's when `port` is given.
+    func runDiagnostics(port: UInt16? = nil) {
+        guard port != nil || isRunning, let ca = try? CertificateAuthority(directory: caDirectory) else {
+            selfCheckText = "请先开启加速"
             return
         }
         selfCheckRunning = true
         selfCheckText = "检测中…"
-        let diagnostics = Diagnostics(caDER: ca.rootCertificateDER, port: proxyPort)
+        let diagnostics = Diagnostics(caDER: ca.rootCertificateDER, port: port ?? proxyPort)
         self.diagnostics = diagnostics
         diagnostics.run { [weak self] result in
             DispatchQueue.main.async {

@@ -3,12 +3,13 @@ import SwiftUI
 @main
 struct BiliScopeApp: App {
     @StateObject private var controller = ProxyController()
+    @StateObject private var vpn = VPNController()
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            HomeView()
                 .environmentObject(controller)
-                .preferredColorScheme(.dark)
+                .environmentObject(vpn)
         }
     }
 }
