@@ -50,7 +50,8 @@ HTTPS 连接做本地终止，然后把播放器的每个 `Range` 请求拆成�
 | NIO MITM 代理（动态 TLS） | ✅ 已跑通 |
 | Range 分片并发 | ✅ 已跑通 |
 | macOS CLI | ✅ |
-| iOS App 壳 + 证书安装 + 后台保活 | 🚧 真机可用，后台保活未充分验证 |
+| iOS App + 内置 VPN（Network Extension） | ✅ 真机跑通，需付费开发者账号 |
+| 小火箭备选路线 | ✅ 真机跑通 |
 
 ## 本机验证
 
@@ -92,22 +93,36 @@ sha256     : 完全一致
 **只设 Wi-Fi 系统代理加速不了官方 B 站 App。** 2026-10-31 在 iPhone 上实测（B 站 9.15.0）：
 代理只收到 `api`、`cm`、`data.bilibili.com`，视频和封面连接一次都没有进来。
 
-目前跑通的路线是**小火箭（Shadowrocket）+ 本 App**：小火箭用 VPN 抓到这些流量，只把 B 站
-媒体域名转给手机上的 `127.0.0.1:8888`。
+现在的主路线是 **App 自带的 Packet Tunnel**（`App/Tunnel`，需要付费开发者账号）：
 
-1. 打开本 App，安装并信任根证书，确认「代理运行中」；Wi-Fi 系统代理保持关闭；
-2. 小火箭添加 HTTP 节点 `127.0.0.1:8888` 并选中；
-3. 导入 [docs/shadowrocket-biliscope.conf](docs/shadowrocket-biliscope.conf) 并使用，全局路由选「配置」；
-4. 彻底关掉 B 站 App 再打开。
+1. 隧道只把 B 站媒体域名的 DNS（`NEDNSSettings.matchDomains`）解析到 `198.19.0.0/16`
+   的映射地址，并只路由 `198.18.0.0/15`，其他流量不经过隧道；
+2. **B 站播放器不走系统 DNS**：2026-11-22 全量排查实测，它先向阿里云 HTTPDNS
+   （`203.119.x.x:80`）查询，再直接连 IP。所以隧道也路由 `203.119.0.0/16`、
+   `203.107.0.0/16`，代理转发 HTTPDNS 请求，只把媒体域名的答案改成 `198.18.200.1`
+   （`HTTPDNSRewriter`），其他答案原样返回，改写失败也原样返回。单纯拒绝 HTTPDNS
+   会让播放器在十几秒后卡住；
+3. [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel)（从源码编译，见
+   `scripts/build-hev-xcframework.sh`）把隧道里的包还原成 TCP，经 SOCKS5 交给扩展里的
+   `MITMProxy`（`127.0.0.1:8889`），连到 `198.18.200.1` 的连接按 `Host` 头或 SNI 找回域名；
+4. 上行用 `requiredInterfaceType` 指定物理网卡，不会绕回隧道；
+5. App 把已信任的根证书经 `providerConfiguration` 交给扩展，日志经 provider message 取回，
+   所以不需要 App Group。
+
+同一个高码率视频的对比（2026-11-22，海外 Wi-Fi）：关闭加速 0 KB/s 无法播放；开启后 1 分钟
+不卡。扩展的内存峰值约 27 MB（上限约 50 MB）；代码审查后同时下载数定为 10 块。
+
+**备选：小火箭（免费账号）**。小火箭用 VPN 抓到这些流量，只把 B 站媒体域名转给手机上
+`127.0.0.1:8888` 的 App 代理，配置见 [docs/shadowrocket-biliscope.conf](docs/shadowrocket-biliscope.conf)。
 
 几个实测得到的约束：
 
 - 播放器的视频走明文 HTTP，常被包在 `CONNECT host:80` 甚至 `CONNECT IP:80` 里，所以代理先看
   第一批字节，再按 `Host` 头或 TLS 的 SNI 判断要不要接管；
-- 小火箭开启时，系统 DNS 返回假 IP（`198.18.x.x`），域名连接还会被送进回环。代理的上行必须指定
-  物理网卡（`requiredInterfaceType`），只禁止 VPN 网卡仍然会循环；
-- 不要把整个 `akamaized.net` 转给代理，只完整匹配 `upos-hz-mirrorakam.akamaized.net`；
-- 代理被杀掉后，小火箭转发的 B 站封面和视频会失败，关掉小火箭的连接开关即可恢复。
+- VPN 开启时，系统 DNS 会给媒体域名返回映射地址，域名连接还可能被送进回环。代理的上行必须
+  指定物理网卡（`requiredInterfaceType`），只禁止 VPN 网卡仍然会循环；
+- `bilicdn*.com` 等域名上跑着 B 站 App 的接口，B 站不接受本地证书，所以它们只转发不解密；
+- 不要把整个 `akamaized.net` 转给代理，只完整匹配 `upos-hz-mirrorakam.akamaized.net`。
 
 ## 退路：Mac 常开 + 局域网代理
 
@@ -180,17 +195,21 @@ Wi-Fi 代理填成 `<手机 Wi-Fi IP>:8888`。这条路径只接受手机自身 
 - ✅ 集成测试：白名单外的 TLS 流量走盲隧道，不被解密；
 - ✅ 真实 Akamai 分片：4 MB 经代理 0.37s，8 片并发，sha256 与直连一致；
 - ✅ 模拟器：B 站 API 走盲隧道记 `tunnel`，媒体走 `accelerated`，首页分别计数；
-- ✅ `iphoneos arm64` 编译通过（`xcodebuild -sdk iphoneos`），不依赖任何 entitlement；
+- ✅ 真机：内置 VPN 只接管媒体，HTTPDNS 改写后视频经隧道加速，下载走 `en0`，同一视频对比
+  关闭加速无法播放、开启后 1 分钟不卡（只测了一次）；
 - ✅ 真机：小火箭 + 本 App，下载走 `en0`，没有循环；同一天的一次粗略对比中（不同视频），
   关闭时卡三次，开启后连续播放不卡，拖动后仍要等约 12 秒；
-- ⚠️ 真机：蜂窝网络、长时间后台保活、音频被打断后的恢复，都还没有验证；
+- ⚠️ 真机：蜂窝网络和 iPad 都还没有验证；拖动后起播仍可能要等几秒；
 - ⚠️ 视频走的是明文 HTTP，App 是否接受本地证书目前只在封面图（`hdslb.com`）上确认过。
 
 ## 目录
 
 ```
-Sources/BiliScopeCore/     代理、证书、白名单、分片
+Sources/BiliScopeCore/     代理、证书、白名单、分片、HTTPDNS 改写
 Sources/biliscope-proxy/   macOS 命令行入口
 Tests/BiliScopeCoreTests/  单元测试
 App/                       iOS SwiftUI App（XcodeGen 工程）
+App/Tunnel/                Packet Tunnel 扩展
+App/Vendor/                从源码编译的 hev-socks5-tunnel
+scripts/                   重新编译 hev-socks5-tunnel 的脚本
 ```
