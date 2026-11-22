@@ -132,6 +132,12 @@ public final class UpstreamClient: @unchecked Sendable {
         connection.currentPath?.availableInterfaces.first?.name
     }
 
+    /// The address actually connected to, without the port.
+    public var remoteAddress: String? {
+        guard case .hostPort(let host, _)? = connection.currentPath?.remoteEndpoint else { return nil }
+        return "\(host)"
+    }
+
     public func send(_ data: Data) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             connection.send(content: data, completion: .contentProcessed { error in
@@ -145,6 +151,11 @@ public final class UpstreamClient: @unchecked Sendable {
     public func receive(maxLength: Int = 128 * 1024) async throws -> Data? {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Data?, Error>) in
             connection.receive(minimumIncompleteLength: 1, maximumLength: maxLength) { data, _, isComplete, error in
+                // ENODATA is how a peer's orderly close sometimes surfaces: end of stream.
+                if case .posix(.ENODATA)? = error {
+                    continuation.resume(returning: data?.isEmpty == false ? data : nil)
+                    return
+                }
                 if let error {
                     continuation.resume(throwing: error)
                     return

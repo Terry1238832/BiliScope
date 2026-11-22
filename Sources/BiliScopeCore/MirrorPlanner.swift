@@ -5,52 +5,47 @@ import Foundation
 /// mainland ones, so we race the mirrors for the first bytes and then keep the
 /// winner for the rest of the file.
 public enum MirrorPlanner {
-    /// Mirror tokens seen in Bilibili's `upos-<region>-mirror<token>` hostnames.
-    public static let tokens = ["cosov", "aliov", "hwov", "08cov", "cos", "ali", "bos", "hw", "08c"]
-
-    /// `upos-sz-mirror<token>.bilivideo.com` — the pool that resolves from most
-    /// networks, including Bilibili's Akamai-served segments.
-    public static let mainlandPool = tokens.map { "upos-sz-mirror\($0).bilivideo.com" }
+    /// Interchangeable mirrors for one signed path, listed as full host names
+    /// because some (`estgoss`, `cn-hk-eq-…`) do not follow the
+    /// `upos-<region>-mirror<token>` pattern. Overseas ones first, then mainland.
+    /// Mostly from Bilibili-thread-ripper's lists; on 2026-11-22 every one
+    /// answered 206 for fresh signed URLs, while `mirrorhwov` and `mirror08cov`
+    /// never connected and were dropped.
+    public static let pool = [
+        "upos-sz-mirrorcosov.bilivideo.com",
+        "upos-sz-mirroraliov.bilivideo.com",
+        "cn-hk-eq-01-01.bilivideo.com",
+        "cn-hk-eq-01-03.bilivideo.com",
+        "upos-sz-mirrorcos.bilivideo.com",
+        "upos-sz-mirrorcoso1.bilivideo.com",
+        "upos-sz-mirrorali.bilivideo.com",
+        "upos-sz-mirrorhw.bilivideo.com",
+        "upos-sz-mirrorbos.bilivideo.com",
+        "upos-sz-mirror08c.bilivideo.com",
+        "upos-sz-mirrorbd.bilivideo.com",
+        "upos-sz-mirror14b.bilivideo.com",
+        "upos-sz-estgoss.bilivideo.com",
+    ]
 
     public static func candidates(for host: String) -> [String] {
-        var result = [host]
-        if let parts = split(host) {
-            for token in tokens where token != parts.token {
-                result.append("\(parts.prefix)\(token).bilivideo.com")
-            }
-        }
-        if isMirrorHost(host) {
-            result.append(contentsOf: mainlandPool)
-        }
+        let lower = host.lowercased()
+        guard isMirrorHost(lower) else { return [host] }
         var seen = Set<String>()
-        return result.filter { seen.insert($0).inserted }
+        return ([lower] + pool).filter { seen.insert($0).inserted }
     }
 
     public static func isMirrorHost(_ host: String) -> Bool {
         let lower = host.lowercased()
-        if HostPolicy.isBilibiliAkamaiMirror(lower) { return true }
+        if HostPolicy.isBilibiliAkamaiMirror(lower) || pool.contains(lower) { return true }
         return lower.hasSuffix(".bilivideo.com") && lower.contains("-mirror") && lower.hasPrefix("upos-")
     }
 
-    /// Groups every mirror of one region together, e.g. `upos-sz-mirror*.bilivideo.com`.
+    /// Groups every mirror together under one key.
     public static func family(for host: String) -> String? {
         // Every Bilibili mirror serves identical bytes for the same signed
         // path, so one winner is reused across videos and CDNs.
         guard isMirrorHost(host) else { return nil }
         return "bilibili-media-pool"
-    }
-
-    private static func split(_ host: String) -> (prefix: String, token: String)? {
-        let suffix = ".bilivideo.com"
-        let lower = host.lowercased()
-        guard lower.hasSuffix(suffix) else { return nil }
-        let left = String(lower.dropLast(suffix.count))
-        guard let range = left.range(of: "-mirror", options: .backwards) else { return nil }
-        let token = String(left[range.upperBound...])
-        guard !token.isEmpty, token.allSatisfy({ $0.isLetter || $0.isNumber }) else { return nil }
-        let prefix = String(left[..<range.upperBound])
-        guard prefix.hasPrefix("upos-") else { return nil }
-        return (prefix, token)
     }
 }
 

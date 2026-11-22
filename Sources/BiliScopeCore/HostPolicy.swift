@@ -22,23 +22,29 @@ public struct HostPolicy: Sendable {
         "bilibili.tv",
         "biliapi.net",
         "biliapi.com",
-    ] + defaultMediaDomains
+    ] + defaultMediaDomains + defaultRelayDomains
 
     /// Media/CDN domains, each with all of its subdomains, where we terminate
     /// TLS to rewrite Range downloads.
     public static let defaultMediaDomains: [String] = [
-        "bilicdn.com",
-        "bilicdn1.com",
-        "bilicdn2.com",
-        "bilicdn3.com",
-        "bilicdn4.com",
-        "bilicdn5.com",
         "biliimg.com",
         "bilivideo.cn",
         "bilivideo.com",
         "bilivideo.net",
         "hdslb.com",
         "hdslb.org",
+    ]
+
+    /// Domains that go through the proxy but are only relayed, never decrypted.
+    /// On a device, `a.w.bilicdn1.com` and `data.bilicdn2.com` carried the app's
+    /// API, which rejected the local certificate and broke playback when decrypted.
+    public static let defaultRelayDomains: [String] = [
+        "bilicdn.com",
+        "bilicdn1.com",
+        "bilicdn2.com",
+        "bilicdn3.com",
+        "bilicdn4.com",
+        "bilicdn5.com",
         "maoercdn.com",
         "mincdn.com",
     ]

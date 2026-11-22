@@ -15,7 +15,7 @@ import NIOPosix
 /// query strings or anything belonging to non-Bilibili hosts.
 public enum TrafficEvent: Sendable {
     case tunnel(host: String)
-    case accelerated(host: String, chunks: Int)
+    case accelerated(host: String, chunks: Int, bytes: Int64)
 }
 
 public final class MITMProxy {
@@ -39,6 +39,19 @@ public final class MITMProxy {
         public var stallTimeout: TimeInterval
         /// How long the player waits on a block before a second mirror joins in.
         public var hedgeDelay: TimeInterval
+        /// How many media files keep a read-ahead window at once. Each holds
+        /// about `concurrency` blocks, so this bounds memory (a Network Extension
+        /// is killed at roughly 50 MB).
+        public var maxSessions: Int
+        /// IPv4 prefixes (like `"203.119."`) of HTTPDNS servers. Their plain-HTTP
+        /// answers for media hosts are rewritten to `httpDNSAnswer`; any other
+        /// port to them is refused, because it cannot be rewritten.
+        public var httpDNSPrefixes: [String]
+        /// An address inside the packet tunnel. Connections to it carry the real
+        /// host name only in their `Host` header or TLS server name.
+        public var httpDNSAnswer: String?
+        /// The HTTPDNS port. Only tests change it.
+        public var httpDNSPort: Int
         public var log: @Sendable (String) -> Void
         public var onEvent: (@Sendable (TrafficEvent) -> Void)?
 
@@ -53,6 +66,10 @@ public final class MITMProxy {
                     mediaUpstreamPort: UInt16 = 443,
                     stallTimeout: TimeInterval = 4,
                     hedgeDelay: TimeInterval = 1.5,
+                    maxSessions: Int = 4,
+                    httpDNSPrefixes: [String] = [],
+                    httpDNSAnswer: String? = nil,
+                    httpDNSPort: Int = 80,
                     log: @escaping @Sendable (String) -> Void = { _ in },
                     onEvent: (@Sendable (TrafficEvent) -> Void)? = nil) {
             self.bindHost = bindHost
@@ -66,6 +83,10 @@ public final class MITMProxy {
             self.mediaUpstreamPort = mediaUpstreamPort
             self.stallTimeout = stallTimeout
             self.hedgeDelay = hedgeDelay
+            self.maxSessions = maxSessions
+            self.httpDNSPrefixes = httpDNSPrefixes
+            self.httpDNSAnswer = httpDNSAnswer
+            self.httpDNSPort = httpDNSPort
             self.log = log
             self.onEvent = onEvent
         }
@@ -76,7 +97,7 @@ public final class MITMProxy {
     private let policy: HostPolicy
     private let config: Configuration
     private let material: TLSMaterial
-    private let sessions = MediaSessionStore()
+    private let sessions: MediaSessionStore
     private let relays = RelayGuard()
     private var server: Channel?
 
@@ -87,6 +108,7 @@ public final class MITMProxy {
         self.policy = policy
         self.config = config
         self.material = TLSMaterial(ca: ca)
+        self.sessions = MediaSessionStore(limit: config.maxSessions)
         self.group = MultiThreadedEventLoopGroup(numberOfThreads: 2)
     }
 
@@ -135,6 +157,12 @@ final class FrontDoorHandler: ChannelInboundHandler {
     private var decided = false
     private var upstream: UpstreamClient?
     private var sendTail: Task<Void, Never>?
+    /// What tells the client its tunnel is open: the HTTP CONNECT answer, or
+    /// the SOCKS5 success reply when the packet tunnel connects through SOCKS5.
+    private var connectReply = [UInt8]("HTTP/1.1 200 Connection Established\r\n\r\n".utf8)
+    private var socks: SocksState?
+
+    private enum SocksState { case greeting, request }
     private var pendingConnect: (host: String, port: Int, route: HostRoute)?
     private let allowlist: ClientAllowlist
 
@@ -173,6 +201,11 @@ final class FrontDoorHandler: ChannelInboundHandler {
         }
         guard !decided else { return }
 
+        if socks != nil || buffer.first == Socks5.version {
+            readSocks(context: context)
+            return
+        }
+
         guard let (request, headEnd) = HTTPHeadParser.parseRequest(buffer) else {
             if buffer.count > HTTPHeadParser.maxHeadSize {
                 context.close(promise: nil)
@@ -199,16 +232,62 @@ final class FrontDoorHandler: ChannelInboundHandler {
         }
 
         let target = request.target
-        let host = HostPolicy.normalize(target)
-        let port = Self.port(from: target)
-        let route = policy.route(for: host)
+        establish(context: context, host: HostPolicy.normalize(target), port: Self.port(from: target))
+    }
 
+    /// SOCKS5 is how the packet tunnel hands over connections: the no-auth
+    /// greeting, then one CONNECT whose target is usually a domain name, because
+    /// the tunnel answers DNS with mapped addresses and keeps the names.
+    private func readSocks(context: ChannelHandlerContext) {
+        if socks == nil { socks = .greeting }
+        if socks == .greeting {
+            guard buffer.count >= 2, buffer.count >= 2 + Int(buffer[buffer.startIndex + 1]) else { return }
+            buffer.removeFirst(2 + Int(buffer[buffer.startIndex + 1]))
+            context.writeAndFlush(NIOAny(ByteBuffer(bytes: [Socks5.version, 0x00])), promise: nil)
+            socks = .request
+        }
+        switch Socks5.parseRequest(buffer) {
+        case .incomplete:
+            return
+        case .invalid:
+            context.close(promise: nil)
+        case .unsupported(let length):
+            // Only CONNECT: refusing UDP ASSOCIATE right away makes QUIC fall back
+            // to TCP, which is the only path this proxy accelerates.
+            buffer.removeFirst(length)
+            respond(context, Socks5.reply(0x07))
+        case .connect(let host, let port, let length):
+            buffer.removeFirst(length)
+            decided = true
+            socks = nil
+            connectReply = Socks5.reply(0x00)
+            establish(context: context, host: HostPolicy.normalize(host), port: port)
+        }
+    }
+
+    private func isHTTPDNS(_ host: String) -> Bool {
+        HostPolicy.isIPAddress(host) && config.httpDNSPrefixes.contains(where: host.hasPrefix)
+    }
+
+    private func isSentinel(_ host: String) -> Bool {
+        config.httpDNSAnswer == host
+    }
+
+    private func establish(context: ChannelHandlerContext, host: String, port: Int) {
+        // An out-of-range port would trap where it becomes a UInt16 later.
+        guard Self.validPorts.contains(port) else {
+            config.log("refused \(host):\(port), invalid port")
+            context.close(promise: nil)
+            return
+        }
+        let route = policy.route(for: host)
         let bareIPOverTLS = HostPolicy.isIPAddress(host) && port == 443
-        if route == .accelerate || bareIPOverTLS || config.plainHTTPConnectPorts.contains(port) {
+        let httpDNSLookup = isHTTPDNS(host) && port == config.httpDNSPort
+        if route == .accelerate || bareIPOverTLS || isSentinel(host) || httpDNSLookup || config.plainHTTPConnectPorts.contains(port) {
             // VPN-style clients send CONNECT for plaintext connections too, often
             // to a bare IP, so the first bytes decide what this tunnel really is.
             pendingConnect = (host, port, route)
-            context.channel.writeAndFlush(ByteBuffer(string: "HTTP/1.1 200 Connection Established\r\n\r\n"), promise: nil)
+            context.channel.writeAndFlush(ByteBuffer(bytes: connectReply), promise: nil)
             if !buffer.isEmpty { routeTunnel(context: context, pending: (host, port, route)) }
         } else {
             startRelay(context: context, host: host, port: port, route: route)
@@ -219,33 +298,144 @@ final class FrontDoorHandler: ChannelInboundHandler {
         guard let first = buffer.first else { return }
         let tlsHandshakeRecord: UInt8 = 0x16
         if first == tlsHandshakeRecord {
+            // The server name sits in the ClientHello, which may arrive in pieces:
+            // decide only once the whole first record is here.
+            if buffer.count >= 5 {
+                let recordLength = Int(buffer[buffer.startIndex + 3]) << 8 | Int(buffer[buffer.startIndex + 4])
+                if buffer.count < 5 + recordLength, buffer.count < 16 << 10 { return }
+            } else {
+                return
+            }
             pendingConnect = nil
             let serverName = TLSClientHello.serverName(in: buffer).map(HostPolicy.normalize)
+            logBareIP(pending, name: serverName)
             if pending.route == .accelerate {
                 startMITM(context: context, host: pending.host, port: pending.port, announce: false)
             } else if HostPolicy.isIPAddress(pending.host), let serverName, policy.route(for: serverName) == .accelerate {
                 startMITM(context: context, host: serverName, port: pending.port, announce: false)
+            } else if isSentinel(pending.host) {
+                // Nothing listens at the tunnel address: relay by name, or give up.
+                if let serverName {
+                    startRelay(context: context, host: serverName, port: pending.port, route: policy.route(for: serverName), announce: false)
+                } else {
+                    context.close(promise: nil)
+                }
             } else {
                 startRelay(context: context, host: pending.host, port: pending.port, route: pending.route, announce: false)
             }
             return
         }
         let looksLikeHTTP = first >= UInt8(ascii: "A") && first <= UInt8(ascii: "Z")
-        if looksLikeHTTP, config.plainHTTPConnectPorts.contains(pending.port) {
-            guard let (request, _) = HTTPHeadParser.parseRequest(buffer) else {
+        if looksLikeHTTP, config.plainHTTPConnectPorts.contains(pending.port) || isSentinel(pending.host)
+            || (isHTTPDNS(pending.host) && pending.port == config.httpDNSPort) {
+            guard let (request, headEnd) = HTTPHeadParser.parseRequest(buffer) else {
                 if buffer.count > HTTPHeadParser.maxHeadSize { context.close(promise: nil) }
                 return
             }
+            // Only lookups are rewritten; any other request to these networks,
+            // from any app, is relayed as it came.
+            if isHTTPDNS(pending.host), pending.port == config.httpDNSPort, Self.isHTTPDNSLookup(request) {
+                pendingConnect = nil
+                buffer.removeFirst(headEnd)
+                rewriteHTTPDNS(channel: context.channel, request: request, address: pending.host)
+                return
+            }
             let target = request.header("Host").map(HostPolicy.normalize) ?? pending.host
+            logBareIP(pending, name: target)
             if request.method == "GET", policy.route(for: target) == .accelerate {
                 pendingConnect = nil
                 config.log("mitm http tunnel \(target)")
                 installPlainMedia(on: context.channel, host: target)
                 return
             }
+            if isSentinel(pending.host), !HostPolicy.isIPAddress(target) {
+                pendingConnect = nil
+                startRelay(context: context, host: target, port: pending.port, route: policy.route(for: target), announce: false)
+                return
+            }
         }
         pendingConnect = nil
+        if isSentinel(pending.host) {
+            context.close(promise: nil)
+            return
+        }
         startRelay(context: context, host: pending.host, port: pending.port, route: pending.route, announce: false)
+    }
+
+    /// Alibaba Cloud HTTPDNS lookups: `/{account}/d?`, `/resolve?` and their
+    /// signed `sign_` forms.
+    static func isHTTPDNSLookup(_ request: HTTPRequestHead) -> Bool {
+        guard request.method == "GET" else { return false }
+        let path = request.path
+        return ["/d?", "/resolve?", "/sign_d?", "/sign_resolve?"].contains { path.contains($0) }
+    }
+
+    /// Fetches the real HTTPDNS answer and points media hosts at the tunnel. Any
+    /// failure returns the original answer: unaccelerated beats a stalled player.
+    private func rewriteHTTPDNS(channel: Channel, request: HTTPRequestHead, address: String) {
+        guard let answer = config.httpDNSAnswer else {
+            channel.close(promise: nil)
+            return
+        }
+        let config = self.config, policy = self.policy
+        Task {
+            var original = Data()
+            do {
+                let client = try await UpstreamClient.openTCP(host: address, port: UInt16(config.httpDNSPort))
+                defer { client.cancel() }
+                // A stalled HTTPDNS server must not hold the player's lookup forever.
+                let deadline = Task {
+                    try await Task.sleep(nanoseconds: 8_000_000_000)
+                    client.cancel()
+                }
+                defer { deadline.cancel() }
+                // HTTP/1.0 with no Accept-Encoding: an identity body, never chunked.
+                let skip: Set<String> = ["accept-encoding", "connection", "proxy-connection", "keep-alive"]
+                var head = "\(request.method) \(request.path) HTTP/1.0\r\n"
+                for header in request.headers where !skip.contains(header.name.lowercased()) {
+                    head += "\(header.name): \(header.value)\r\n"
+                }
+                head += "Connection: close\r\n\r\n"
+                try await client.send(Data(head.utf8))
+                while let chunk = try await client.receive() {
+                    original.append(chunk)
+                    // Answers are a few KB; anything this large is not one to rewrite.
+                    guard original.count < 512 << 10 else { throw UpstreamClient.Failure.http("answer too large") }
+                }
+            } catch {
+                config.log("httpdns \(address) failed: \(error)")
+                try? await channel.close().get()
+                return
+            }
+            var reply = original
+            if let (head, end) = HTTPHeadParser.parseResponse(original) {
+                let body = original.subdata(in: original.startIndex + end..<original.endIndex)
+                if let (rewritten, hosts) = HTTPDNSRewriter.rewrite(body, answer: answer,
+                                                                   isMedia: { policy.route(for: $0) == .accelerate }) {
+                    if !hosts.isEmpty {
+                        var out = HTTPResponseHead(status: head.status, reason: head.reason, headers: head.headers.filter {
+                            !["content-length", "transfer-encoding", "connection"].contains($0.name.lowercased())
+                        })
+                        out.headers.append(("Connection", "close"))
+                        reply = HTTPHeadParser.serialize(response: out, bodyLength: Int64(rewritten.count), keepAlive: false) + rewritten
+                        config.log("httpdns rewrote \(hosts.joined(separator: ","))")
+                    }
+                } else {
+                    config.log("httpdns \(address) unparsed: \(String(decoding: body.prefix(160), as: UTF8.self))")
+                }
+            }
+            try? await channel.writeAndFlush(ByteBuffer(bytes: reply)).get()
+            try? await channel.close().get()
+        }
+    }
+
+    /// Connections to a bare IP skip DNS, so the packet tunnel's split DNS never
+    /// sees them. Logging what they carry shows how much traffic that leaves out.
+    private func logBareIP(_ pending: (host: String, port: Int, route: HostRoute), name: String?) {
+        guard HostPolicy.isIPAddress(pending.host) else { return }
+        let named = name.map { policy.isBilibili($0) ? $0 : (config.logForeignHosts ? $0 : "non-Bilibili") } ?? "unknown"
+        guard policy.isBilibili(name ?? "") || config.logForeignHosts else { return }
+        config.log("bare ip \(pending.host):\(pending.port) carries \(named)")
     }
 
     private func startMITM(context: ChannelHandlerContext, host: String, port: Int, announce: Bool = true) {
@@ -265,7 +455,7 @@ final class FrontDoorHandler: ChannelInboundHandler {
         config.log("mitm \(host)")
         let promise = channel.eventLoop.makePromise(of: Void.self)
         if announce {
-            channel.writeAndFlush(ByteBuffer(string: "HTTP/1.1 200 Connection Established\r\n\r\n"), promise: promise)
+            channel.writeAndFlush(ByteBuffer(bytes: connectReply), promise: promise)
         } else {
             promise.succeed(())
         }
@@ -351,7 +541,7 @@ final class FrontDoorHandler: ChannelInboundHandler {
     private func startRelay(context: ChannelHandlerContext, host: String, port: Int, route: HostRoute, announce: Bool = true) {
         guard acquireRelay(context: context, host: host, port: port) else { return }
         if announce {
-            context.channel.writeAndFlush(ByteBuffer(string: "HTTP/1.1 200 Connection Established\r\n\r\n"), promise: nil)
+            context.channel.writeAndFlush(ByteBuffer(bytes: connectReply), promise: nil)
         }
         openRelay(channel: context.channel, host: host, port: port, head: nil) {
             // Never log foreign hostnames: the proxy is a pass-through for
@@ -411,7 +601,11 @@ final class FrontDoorHandler: ChannelInboundHandler {
     }
 
     private func respond(_ context: ChannelHandlerContext, _ text: String) {
-        context.writeAndFlush(NIOAny(ByteBuffer(string: text)), promise: nil)
+        respond(context, [UInt8](text.utf8))
+    }
+
+    private func respond(_ context: ChannelHandlerContext, _ bytes: [UInt8]) {
+        context.writeAndFlush(NIOAny(ByteBuffer(bytes: bytes)), promise: nil)
         context.close(promise: nil)
     }
 
@@ -420,6 +614,8 @@ final class FrontDoorHandler: ChannelInboundHandler {
         let text = target[target.index(after: colon)...]
         return Int(text) ?? 443
     }
+
+    private static let validPorts = 1...65535
 
     func channelInactive(context: ChannelHandlerContext) {
         if let relayKey { relays.release(relayKey) }
@@ -500,6 +696,12 @@ final class MediaHandler: ChannelInboundHandler {
         var incoming = unwrapInboundIn(data)
         if let bytes = incoming.readBytes(length: incoming.readableBytes) {
             buffer.append(contentsOf: bytes)
+        }
+        // One request per connection, and its body is never forwarded: bytes piling
+        // up here would only eat the tunnel's memory.
+        if buffer.count > HTTPHeadParser.maxHeadSize * 4 {
+            context.close(promise: nil)
+            return
         }
         guard !busy, let (request, headEnd) = HTTPHeadParser.parseRequest(buffer) else { return }
         busy = true
@@ -595,7 +797,7 @@ final class MediaHandler: ChannelInboundHandler {
         let via = await session.bestHost
         let ms = Int(Date().timeIntervalSince(started) * 1000)
         config.log("accelerated \(host) via \(via) \(span.start)-\(end - 1)/\(total) \((end - span.start) >> 10)KB \(ms)ms \(used) blocks")
-        config.onEvent?(.accelerated(host: host, chunks: used))
+        config.onEvent?(.accelerated(host: host, chunks: used, bytes: end - span.start))
         try? await channel.close().get()
     }
 
@@ -629,3 +831,59 @@ extension FrontDoorHandler: RemovableChannelHandler {
         context.leavePipeline(removalToken: removalToken)
     }
 }
+
+// MARK: - SOCKS5
+
+enum Socks5 {
+    static let version: UInt8 = 0x05
+
+    enum Request: Equatable {
+        case incomplete
+        case invalid
+        /// A command other than CONNECT; `length` is the request's size.
+        case unsupported(length: Int)
+        case connect(host: String, port: Int, length: Int)
+    }
+
+    /// Parses `VER CMD RSV ATYP ADDR PORT` (RFC 1928, section 4).
+    static func parseRequest(_ data: Data) -> Request {
+        let bytes = [UInt8](data.prefix(262))
+        guard bytes.count >= 5 else { return .incomplete }
+        guard bytes[0] == version else { return .invalid }
+        let host: String
+        let addressEnd: Int
+        switch bytes[3] {
+        case 0x01:
+            addressEnd = 8
+            guard bytes.count >= addressEnd else { return .incomplete }
+            host = bytes[4..<8].map(String.init).joined(separator: ".")
+        case 0x03:
+            let length = Int(bytes[4])
+            addressEnd = 5 + length
+            guard length > 0 else { return .invalid }
+            guard bytes.count >= addressEnd else { return .incomplete }
+            guard let name = String(bytes: bytes[5..<addressEnd], encoding: .utf8) else { return .invalid }
+            host = name
+        case 0x04:
+            addressEnd = 20
+            guard bytes.count >= addressEnd else { return .incomplete }
+            var raw = in6_addr()
+            withUnsafeMutableBytes(of: &raw) { $0.copyBytes(from: bytes[4..<20]) }
+            var text = [CChar](repeating: 0, count: Int(INET6_ADDRSTRLEN))
+            guard inet_ntop(AF_INET6, &raw, &text, socklen_t(text.count)) != nil else { return .invalid }
+            host = "[" + String(cString: text) + "]"
+        default:
+            return .invalid
+        }
+        guard bytes.count >= addressEnd + 2 else { return .incomplete }
+        let port = Int(bytes[addressEnd]) << 8 | Int(bytes[addressEnd + 1])
+        let length = addressEnd + 2
+        return bytes[1] == 0x01 ? .connect(host: host, port: port, length: length) : .unsupported(length: length)
+    }
+
+    /// A reply with a zero IPv4 bind address, which clients ignore.
+    static func reply(_ status: UInt8) -> [UInt8] {
+        [version, status, 0x00, 0x01, 0, 0, 0, 0, 0, 0]
+    }
+}
+

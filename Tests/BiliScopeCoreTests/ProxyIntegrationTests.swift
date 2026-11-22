@@ -280,6 +280,120 @@ final class ProxyIntegrationTests: XCTestCase {
         XCTAssertTrue(lines.contains("accelerated localhost"), "not accelerated: \(lines.all)")
     }
 
+    /// The packet tunnel connects through SOCKS5 with a domain name (socks5h);
+    /// that must reach the same acceleration path as an HTTP CONNECT.
+    func testSocks5DomainConnectIsAccelerated() throws {
+        let payload = Data((0..<700_000).map { UInt8(($0 * 17) % 251) })
+        let ca = try CertificateAuthority(directory: caDirectory)
+        let origin = try TestOriginServer(payload: payload, ca: ca)
+        try origin.start()
+        defer { origin.stop() }
+
+        let lines = LogRecorder()
+        let policy = HostPolicy(domains: ["localhost"], mediaDomains: ["localhost"])
+        let proxy = MITMProxy(ca: ca, policy: policy, config: .init(port: 0,
+                                                                    chunkSize: 128 << 10,
+                                                                    upstreamTrustRootDER: ca.rootCertificateDER,
+                                                                    log: { lines.append($0) }))
+        let proxyPort = try proxy.start()
+        defer { proxy.stop() }
+
+        let result = try fetchThroughProxy(proxyPort: proxyPort, ca: ca,
+                                          url: "https://localhost:\(origin.port)/file", range: "1000-300999",
+                                          scheme: "socks5h")
+        XCTAssertEqual(result.status, 206, result.stderr)
+        XCTAssertEqual(result.body, payload.subdata(in: 1000..<301_000))
+        XCTAssertTrue(lines.contains("accelerated localhost"), "not accelerated: \(lines.all)")
+    }
+
+    /// Hosts outside the media list are relayed untouched over SOCKS5 too.
+    func testSocks5ForeignHostIsRelayed() throws {
+        let payload = Data((0..<50_000).map { UInt8($0 % 89) })
+        let ca = try CertificateAuthority(directory: caDirectory)
+        let origin = try TestOriginServer(payload: payload, ca: ca, useTLS: false)
+        try origin.start()
+        defer { origin.stop() }
+
+        let proxy = MITMProxy(ca: ca, policy: HostPolicy(), config: .init(port: 0))
+        let proxyPort = try proxy.start()
+        defer { proxy.stop() }
+
+        let result = try fetchThroughProxy(proxyPort: proxyPort, ca: ca,
+                                          url: "http://127.0.0.1:\(origin.port)/file", range: "0-1023",
+                                          scheme: "socks5")
+        XCTAssertEqual(result.status, 206, result.stderr)
+        XCTAssertEqual(result.body, Data(payload.prefix(1024)))
+    }
+
+    /// Only port 80 to an HTTPDNS prefix is rewritten; any other port is relayed
+    /// untouched, so other apps' HTTPS to those networks keeps working.
+    func testHTTPDNSPrefixOnOtherPortsIsRelayed() throws {
+        let payload = Data((0..<20_000).map { UInt8($0 % 97) })
+        let ca = try CertificateAuthority(directory: caDirectory)
+        let origin = try TestOriginServer(payload: payload, ca: ca, useTLS: false)
+        try origin.start()
+        defer { origin.stop() }
+
+        let lines = LogRecorder()
+        let proxy = MITMProxy(ca: ca, policy: HostPolicy(), config: .init(port: 0,
+                                                                         httpDNSPrefixes: ["127.0.0."],
+                                                                         log: { lines.append($0) }))
+        let proxyPort = try proxy.start()
+        defer { proxy.stop() }
+
+        let result = try fetchThroughProxy(proxyPort: proxyPort, ca: ca, url: "http://127.0.0.1:\(origin.port)/file",
+                                          range: "0-1023", scheme: "socks5")
+        XCTAssertEqual(result.status, 206, result.stderr)
+        XCTAssertEqual(result.body, Data(payload.prefix(1024)))
+        XCTAssertFalse(lines.contains("refused"), "\(lines.all)")
+    }
+
+    /// An HTTPDNS lookup has its media answers pointed at the tunnel address.
+    func testHTTPDNSLookupIsRewritten() throws {
+        let answer = Data(#"{"host":"upos-sz-mirrorcos.bilivideo.com","ips":["43.175.144.148"],"ttl":60}"#.utf8)
+        let result = try fetchHTTPDNS(answer: answer, path: "/191607/d?host=upos-sz-mirrorcos.bilivideo.com")
+        XCTAssertEqual(result.status, 200, result.stderr)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: result.body) as? [String: Any])
+        XCTAssertEqual(json["ips"] as? [String], ["198.18.200.1"])
+    }
+
+    /// Any other request to an HTTPDNS network is relayed byte for byte.
+    func testNonLookupToHTTPDNSNetworkIsRelayed() throws {
+        let answer = Data(#"{"host":"upos-sz-mirrorcos.bilivideo.com","ips":["43.175.144.148"]}"#.utf8)
+        let result = try fetchHTTPDNS(answer: answer, path: "/static/app.json")
+        XCTAssertEqual(result.status, 200, result.stderr)
+        XCTAssertEqual(result.body, answer)
+    }
+
+    private func fetchHTTPDNS(answer: Data, path: String) throws -> CurlResult {
+        let ca = try CertificateAuthority(directory: caDirectory)
+        let origin = try TestOriginServer(payload: answer, ca: ca, useTLS: false, ignoresRange: true)
+        try origin.start()
+        defer { origin.stop() }
+        let proxy = MITMProxy(ca: ca, policy: HostPolicy(), config: .init(port: 0,
+                                                                         httpDNSPrefixes: ["127.0.0."],
+                                                                         httpDNSAnswer: "198.18.200.1",
+                                                                         httpDNSPort: origin.port))
+        let proxyPort = try proxy.start()
+        defer { proxy.stop() }
+        return try fetchThroughProxy(proxyPort: proxyPort, ca: ca, url: "http://127.0.0.1:\(origin.port)\(path)",
+                                     range: "0-", scheme: "socks5")
+    }
+
+    func testSocks5RequestParsing() {
+        let domain: [UInt8] = [5, 1, 0, 3, 9] + Array("bilivideo".utf8) + [0x01, 0xBB]
+        XCTAssertEqual(Socks5.parseRequest(Data(domain)), .connect(host: "bilivideo", port: 443, length: domain.count))
+        XCTAssertEqual(Socks5.parseRequest(Data(domain.prefix(8))), .incomplete)
+        let ipv4: [UInt8] = [5, 1, 0, 1, 92, 38, 145, 145, 0, 80]
+        XCTAssertEqual(Socks5.parseRequest(Data(ipv4)), .connect(host: "92.38.145.145", port: 80, length: 10))
+        let udp: [UInt8] = [5, 3, 0, 1, 0, 0, 0, 0, 0, 0]
+        XCTAssertEqual(Socks5.parseRequest(Data(udp)), .unsupported(length: 10))
+        var ipv6: [UInt8] = [5, 1, 0, 4] + [UInt8](repeating: 0, count: 15) + [1]
+        ipv6 += [0x01, 0xBB]
+        XCTAssertEqual(Socks5.parseRequest(Data(ipv6)), .connect(host: "[::1]", port: 443, length: 22))
+        XCTAssertEqual(Socks5.parseRequest(Data([4, 1, 0, 1, 0])), .invalid)
+    }
+
     // MARK: - Helpers
 
     private struct CurlResult {
@@ -288,7 +402,8 @@ final class ProxyIntegrationTests: XCTestCase {
         let stderr: String
     }
 
-    private func fetchThroughProxy(proxyPort: Int, ca: CertificateAuthority, url: String, range: String, extra: [String] = [], expectSuccess: Bool = true) throws -> CurlResult {
+    private func fetchThroughProxy(proxyPort: Int, ca: CertificateAuthority, url: String, range: String, extra: [String] = [], expectSuccess: Bool = true,
+                                   scheme: String = "http") throws -> CurlResult {
         let caPath = caDirectory.appendingPathComponent("ca.pem")
         try Data(ca.rootCertificatePEM.utf8).write(to: caPath)
 
@@ -301,7 +416,7 @@ final class ProxyIntegrationTests: XCTestCase {
         process.executableURL = URL(fileURLWithPath: "/usr/bin/curl")
         process.arguments = [
             "-sS", "--max-time", "30",
-            "-x", "http://127.0.0.1:\(proxyPort)",
+            "-x", "\(scheme)://127.0.0.1:\(proxyPort)",
             "--cacert", caPath.path,
             "-r", range,
             "-o", outputURL.path,
@@ -353,7 +468,7 @@ final class TestOriginServer {
             let payload = self.payload
             let targets = self.targets
             let channel = try ServerBootstrap(group: group)
-                .childChannelInitializer { $0.pipeline.addHandler(RangeResponder(payload: payload, targets: targets)) }
+                .childChannelInitializer { [ignoresRange] in $0.pipeline.addHandler(RangeResponder(payload: payload, targets: targets, ignoresRange: ignoresRange)) }
                 .bind(host: "127.0.0.1", port: 0).wait()
             self.channel = channel
             self.port = channel.localAddress?.port ?? 0

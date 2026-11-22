@@ -20,7 +20,8 @@ actor MediaSession {
     private let family: String
     private var hosts: [String]
     private var speeds: [String: Double] = [:]
-    private var blocks: [Int64: Task<MediaBlock, Error>] = [:]
+    private var blocks: [Int64: (id: Int, task: Task<MediaBlock, Error>)] = [:]
+    private var nextBlockID = 0
     private var total: Int64?
     private var picks = 0
     private var ranking: Task<Void, Error>?
@@ -45,15 +46,20 @@ actor MediaSession {
 
     func block(_ index: Int64, rankingFrom offset: Int64) async throws -> MediaBlock {
         waiting[index, default: 0] += 1
-        defer { waiting[index, default: 1] -= 1 }
+        defer {
+            let left = waiting[index, default: 1] - 1
+            waiting[index] = left > 0 ? left : nil
+        }
         try await rank(from: offset)
         return try await task(for: index).value
     }
 
     /// Moves the read-ahead window to the play position and drops what fell out of it.
     func advance(to index: Int64) {
-        for (key, task) in blocks where key < index - 1 || key >= index + window * 2 {
-            task.cancel()
+        // Another request on the same file may still be waiting for a block
+        // outside this window, so those are kept.
+        for (key, entry) in blocks where (key < index - 1 || key >= index + window) && waiting[key] == nil {
+            entry.task.cancel()
             blocks[key] = nil
         }
         guard let total else { return }
@@ -64,14 +70,16 @@ actor MediaSession {
     }
 
     func cancelAll() {
-        blocks.values.forEach { $0.cancel() }
+        blocks.values.forEach { $0.task.cancel() }
         blocks.removeAll()
     }
 
     private func task(for index: Int64) -> Task<MediaBlock, Error> {
-        if let existing = blocks[index] { return existing }
-        let task = Task { try await self.download(index) }
-        blocks[index] = task
+        if let existing = blocks[index] { return existing.task }
+        nextBlockID += 1
+        let id = nextBlockID
+        let task = Task { try await self.download(index, id: id) }
+        blocks[index] = (id, task)
         return task
     }
 
@@ -81,9 +89,13 @@ actor MediaSession {
         case hedgeDue
     }
 
-    private func download(_ index: Int64) async throws -> MediaBlock {
+    private func download(_ index: Int64, id: Int) async throws -> MediaBlock {
         let span = ByteSpan(start: index * blockSize, end: (index + 1) * blockSize)
-        let order = nextHostOrder()
+        // Sampling a slower mirror is only safe far from the play position: on a
+        // device, samples landing on blocks the player was waiting for were the
+        // multi-second stalls it showed.
+        let nearPlayer = index <= (waiting.keys.max() ?? index) + 2
+        let order = nextHostOrder(explore: !nearPlayer)
         let request = self.request, port = self.port, config = self.config
 
         func launch(_ host: String, in group: inout TaskGroup<Attempt>) {
@@ -126,8 +138,9 @@ actor MediaSession {
                 case .done(let host, let seconds, let head, let body):
                     running -= 1
                     record(host, speed: Double(body.count) / seconds)
+                    // A mirror answering a different range must not be served as this block.
                     guard let range = RangeHeader.parseContentRange(head.header("Content-Range")),
-                          let length = range.total else {
+                          let length = range.total, range.span.start == span.start else {
                         lastError = UpstreamClient.Failure.http("missing Content-Range")
                         if next < order.count {
                             launch(order[next], in: &group)
@@ -172,7 +185,8 @@ actor MediaSession {
             }
             return .failure(lastError)
         }
-        if case .failure = result { blocks[index] = nil }
+        // Forget only this attempt: after a cancel the slot may hold a newer one.
+        if case .failure = result, blocks[index]?.id == id { blocks[index] = nil }
         return try result.get()
     }
 
@@ -197,10 +211,12 @@ actor MediaSession {
         return measured + healthy.filter { speeds[$0] == nil } + cooling
     }
 
-    /// Mostly the fastest mirror, but every fourth block samples the runner-up,
-    /// because a mirror that was fast for one file can be slow for the next.
-    private func nextHostOrder() -> [String] {
+    /// Mostly the fastest mirror, but every fourth block far ahead of the player
+    /// samples the runner-up, because a mirror that was fast for one file can be
+    /// slow for the next.
+    private func nextHostOrder(explore: Bool) -> [String] {
         var order = rankedHosts()
+        guard explore else { return order }
         picks += 1
         if picks % 4 == 0, order.count > 1 { order.swapAt(0, 1) }
         return order
@@ -241,7 +257,11 @@ actor MediaSession {
 actor MediaSessionStore {
     private var sessions: [String: MediaSession] = [:]
     private var recent: [String] = []
-    private let limit = 4
+    private let limit: Int
+
+    init(limit: Int = 4) {
+        self.limit = max(1, limit)
+    }
 
     func session(for request: HTTPRequestHead, host: String, port: UInt16,
                  config: MITMProxy.Configuration) async -> MediaSession {
@@ -260,18 +280,22 @@ actor MediaSessionStore {
     }
 }
 
-/// Logs the upstream interface when it changes: `utun` here would mean a loop.
+/// Logs the upstream interface when it changes (`utun` or `lo0` would mean a
+/// loop), and the first addresses it reaches (a mapped tunnel address would mean
+/// the proxy resolved through its own fake DNS).
 enum InterfaceLog {
     private static let lock = NSLock()
     nonisolated(unsafe) private static var last: String?
+    nonisolated(unsafe) private static var remotes = Set<String>()
 
-    static func note(_ name: String?, config: MITMProxy.Configuration) {
-        guard let name else { return }
+    static func note(_ name: String?, remote: String? = nil, config: MITMProxy.Configuration) {
         lock.lock()
-        let changed = last != name
-        last = name
+        let changed = name != nil && last != name
+        if changed { last = name }
+        let newRemote = remote.map { remotes.count < 24 && remotes.insert($0).inserted } ?? false
         lock.unlock()
-        if changed { config.log("upstream via \(name)") }
+        if changed, let name { config.log("upstream via \(name)") }
+        if newRemote, let remote { config.log("upstream reached \(remote)") }
     }
 }
 
@@ -296,7 +320,7 @@ enum MediaFetch {
                                                    timeout: connectTimeout,
                                                    trustRootDER: config.upstreamTrustRootDER)
         defer { client.cancel() }
-        InterfaceLog.note(client.interfaceName, config: config)
+        InterfaceLog.note(client.interfaceName, remote: client.remoteAddress, config: config)
         let progress = Progress()
         let stallTimeout = config.stallTimeout
         let watchdog = Task {
@@ -319,7 +343,9 @@ enum MediaFetch {
             guard let length = Int(head.header("Content-Length") ?? ""), length > 0 else {
                 throw UpstreamClient.Failure.http("chunk without Content-Length")
             }
-            var body = Data(capacity: length)
+            // Grows with what arrives instead of reserving the whole block up front:
+            // hedged and slow attempts would otherwise each pin a full block.
+            var body = Data()
             while body.count < length {
                 guard let chunk = try await stream.readSome() else { throw UpstreamClient.Failure.closed }
                 progress.touch()

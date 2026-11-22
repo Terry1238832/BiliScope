@@ -33,11 +33,16 @@ final class HostPolicyTests: XCTestCase {
     }
 
     func testMediaDomainsCoverThemselvesAndSubdomains() {
-        let hosts = ["bilicdn1.com", "x.bilicdn3.com", "a.b.bilicdn5.com", "i0.biliimg.com",
-                     "bilivideo.net", "upos.bilivideo.net", "hdslb.org", "i0.hdslb.org",
-                     "a.maoercdn.com", "mincdn.com", "x.mincdn.com"]
+        let hosts = ["i0.biliimg.com", "biliimg.com", "bilivideo.net", "upos.bilivideo.net",
+                     "hdslb.org", "i0.hdslb.org", "upos-sz-mirrorcos.bilivideo.cn"]
         for host in hosts {
             XCTAssertEqual(policy.route(for: host), .accelerate, host)
+        }
+        // API hosts live on these, so they are relayed, never decrypted.
+        let relayed = ["a.w.bilicdn1.com", "data.bilicdn2.com", "x.bilicdn3.com", "a.b.bilicdn5.com",
+                       "bilicdn.com", "a.maoercdn.com", "mincdn.com", "x.mincdn.com"]
+        for host in relayed {
+            XCTAssertEqual(policy.route(for: host), .blindTunnel, host)
         }
         for host in ["bilicdn6.com", "hdslb.org.evil.com", "notmincdn.com", "maoercdn.co"] {
             XCTAssertEqual(policy.route(for: host), .passthrough, host)

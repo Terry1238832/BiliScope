@@ -29,6 +29,20 @@ final class MirrorPlannerTests: XCTestCase {
         XCTAssertEqual(MirrorPlanner.candidates(for: "foo.akamaized.net"), ["foo.akamaized.net"])
     }
 
+    func testPoolUsesUpstreamHostsAndDropsDeadOnes() {
+        let candidates = MirrorPlanner.candidates(for: "upos-sz-mirrorcos.bilivideo.com")
+        for host in ["upos-sz-mirrorbd.bilivideo.com", "upos-sz-mirror14b.bilivideo.com",
+                     "upos-sz-estgoss.bilivideo.com", "upos-sz-mirrorcoso1.bilivideo.com",
+                     "cn-hk-eq-01-01.bilivideo.com", "cn-hk-eq-01-03.bilivideo.com"] {
+            XCTAssertTrue(candidates.contains(host), host)
+        }
+        XCTAssertFalse(candidates.contains("upos-sz-mirrorhwov.bilivideo.com"))
+        XCTAssertFalse(candidates.contains("upos-sz-mirror08cov.bilivideo.com"))
+        XCTAssertTrue(MirrorPlanner.isMirrorHost("upos-sz-estgoss.bilivideo.com"))
+        XCTAssertEqual(MirrorPlanner.candidates(for: "cn-hk-eq-01-03.bilivideo.com").first,
+                       "cn-hk-eq-01-03.bilivideo.com")
+    }
+
     func testUnknownHostsStaySingle() {
         XCTAssertEqual(MirrorPlanner.candidates(for: "i0.hdslb.com"), ["i0.hdslb.com"])
         XCTAssertEqual(MirrorPlanner.candidates(for: "cn-hbxy-cu-01-11.bilivideo.com"),
